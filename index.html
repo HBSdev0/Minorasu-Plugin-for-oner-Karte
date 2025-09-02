@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIツール - ダッシュボード</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="top-section">
+            <div class="table-section">
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>項目名</th>
+                                <th>現状</th>
+                                <th>平均</th>
+                                <th>試算</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ROA(%)</td>
+                                <td>5.5</td>
+                                <td>4.5</td>
+                                <td>6.0</td>
+                            </tr>
+                            <tr>
+                                <td>運営コスト率(%)</td>
+                                <td>25.0</td>
+                                <td>27.9</td>
+                                <td>23.0</td>
+                            </tr>
+                            <tr>
+                                <td>所得税率(%)</td>
+                                <td>20.0</td>
+                                <td>22.5</td>
+                                <td>18.0</td>
+                            </tr>
+                            <tr>
+                                <td>相続税率(%)</td>
+                                <td>15.0</td>
+                                <td>20.0</td>
+                                <td>12.0</td>
+                            </tr>
+                            <tr>
+                                <td>CF運営コスト率(%)</td>
+                                <td>18.5</td>
+                                <td>21.7</td>
+                                <td>16.0</td>
+                            </tr>
+                            <tr>
+                                <td>CFNOI(%)</td>
+                                <td>12.0</td>
+                                <td>10.1</td>
+                                <td>14.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <button class="chart-toggle-button active" onclick="switchChart('radar')">レーダーチャート</button>
+                        <button class="chart-toggle-button" onclick="switchChart('bar')">棒グラフ</button>
+                    </div>
+                    <div class="chart-item">
+                        <div id="radarChartContainer">
+                            <h3>財務指標レーダーチャート</h3>
+                            <div class="chart-canvas-wrap"><canvas id="radarChart"></canvas></div>
+                        </div>
+                        <div id="barChartContainer" style="display: none;">
+                            <h3>財務指標棒グラフ</h3>
+                            <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-section">
+            <div class="tabs">
+                <button class="tab-button active" onclick="openTab(event, 'roaTab')">資産効率・ROA</button>
+                <button class="tab-button" onclick="openTab(event, 'operatingCostTab')">運営コスト率</button>
+                <button class="tab-button" onclick="openTab(event, 'incomeTaxTab')">所得税率</button>
+                <button class="tab-button" onclick="openTab(event, 'inheritanceTaxTab')">相続税率</button>
+                <button class="tab-button" onclick="openTab(event, 'cfOperatingCostTab')">CF運営コスト率</button>
+                <button class="tab-button" onclick="openTab(event, 'cfnoiTab')">CFNOI</button>
+            </div>
+
+            <div id="roaTab" class="tab-content active">
+                <h3>資産効率・ROA設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="roaCurrent">現状 - ROA(%):</label>
+                        <input type="number" id="roaCurrent" value="5.5" min="0" max="50" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="roaAverage">平均 - ROA(%):</label>
+                        <input type="number" id="roaAverage" value="4.5" min="0" max="50" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="roaForecast">試算 - ROA(%):</label>
+                        <input type="number" id="roaForecast" value="6.0" min="0" max="50" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+            <div id="operatingCostTab" class="tab-content">
+                <h3>運営コスト率設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="operatingCostCurrent">現状 - 運営コスト率(%):</label>
+                        <input type="number" id="operatingCostCurrent" value="25.0" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="operatingCostAverage">平均 - 運営コスト率(%):</label>
+                        <input type="number" id="operatingCostAverage" value="27.9" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="operatingCostForecast">試算 - 運営コスト率(%):</label>
+                        <input type="number" id="operatingCostForecast" value="23.0" min="0" max="100" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+            <div id="incomeTaxTab" class="tab-content">
+                <h3>所得税率設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="incomeTaxCurrent">現状 - 所得税率(%):</label>
+                        <input type="number" id="incomeTaxCurrent" value="20.0" min="0" max="50" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="incomeTaxAverage">平均 - 所得税率(%):</label>
+                        <input type="number" id="incomeTaxAverage" value="22.5" min="0" max="50" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="incomeTaxForecast">試算 - 所得税率(%):</label>
+                        <input type="number" id="incomeTaxForecast" value="18.0" min="0" max="50" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+            <div id="inheritanceTaxTab" class="tab-content">
+                <h3>相続税率設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="inheritanceTaxCurrent">現状 - 相続税率(%):</label>
+                        <input type="number" id="inheritanceTaxCurrent" value="15.0" min="0" max="55" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="inheritanceTaxAverage">平均 - 相続税率(%):</label>
+                        <input type="number" id="inheritanceTaxAverage" value="20.0" min="0" max="55" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="inheritanceTaxForecast">試算 - 相続税率(%):</label>
+                        <input type="number" id="inheritanceTaxForecast" value="12.0" min="0" max="55" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+            <div id="cfOperatingCostTab" class="tab-content">
+                <h3>CF運営コスト率設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="cfOperatingCostCurrent">現状 - CF運営コスト率(%):</label>
+                        <input type="number" id="cfOperatingCostCurrent" value="18.5" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cfOperatingCostAverage">平均 - CF運営コスト率(%):</label>
+                        <input type="number" id="cfOperatingCostAverage" value="21.7" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cfOperatingCostForecast">試算 - CF運営コスト率(%):</label>
+                        <input type="number" id="cfOperatingCostForecast" value="16.0" min="0" max="100" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+            <div id="cfnoiTab" class="tab-content">
+                <h3>CFNOI設定</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="cfnoiCurrent">現状 - CFNOI(%):</label>
+                        <input type="number" id="cfnoiCurrent" value="12.0" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cfnoiAverage">平均 - CFNOI(%):</label>
+                        <input type="number" id="cfnoiAverage" value="10.1" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cfnoiForecast">試算 - CFNOI(%):</label>
+                        <input type="number" id="cfnoiForecast" value="14.0" min="0" max="100" step="0.1">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
