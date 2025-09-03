@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>BI Dashboard Plugin Settings</title>
+</head>
+<body>
+    <div class="plugin-container">
+        <header class="plugin-header">
+            <h1>BIダッシュボードプラグイン</h1>
+            <p class="subtitle">設定画面</p>
+        </header>
+
+        <main class="plugin-main">
+            <div class="settings-section">
+                <h2>全般設定</h2>
+                <div class="space-config">
+                    <div class="space-group">
+                        <label for="spaceId">表示スペースID</label>
+                        <input type="text" id="spaceId" class="space-input" placeholder="例: dashboard">
+                        <p class="help-text">プラグインのダッシュボードを表示するスペースフィールドのIDを指定してください。</p>
+                    </div>
+                </div>
+                
+                <div class="current-app-config">
+                    <div class="current-app-group">
+                        <label for="currentAppOwnerId">自アプリ内のオーナーIDフィールド</label>
+                        <select id="currentAppOwnerId" class="app-dropdown kintone-current-app-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                        <p class="help-text">このアプリ内でオーナーを識別するためのフィールドを選択してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>データソース設定</h2>
+                
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="owner">①オーナーマスタ</button>
+                        <button class="tab-button" data-tab="property">②物件マスタ</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="ownerTab" class="tab-pane active">
+                            <div class="mapping-group">
+                                <h3>オーナーマスタ の設定</h3>
+                                
+                                <div class="app-selection">
+                                    <div class="app-group">
+                                        <label for="ownerAppId">アプリを選択</label>
+                                        <select id="ownerAppId" class="app-dropdown kintone-app-select"></select>
+                                    </div>
+                                </div>
+                                
+                                <h4>オーナーID設定</h4>
+                                <div class="field-mappings" id="ownerIdMappings">
+                                    <!-- Owner ID field will be dynamically added here by JS -->
+                                </div>
+                                
+                                <h4>フィールドマッピング</h4>
+                                <div class="field-mappings" id="ownerFieldMappings">
+                                    <!-- Fields will be dynamically added here by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="propertyTab" class="tab-pane">
+                            <div class="mapping-group">
+                                <h3>物件マスタの設定</h3>
+                                
+                                <div class="app-selection">
+                                    <div class="app-group">
+                                        <label for="propertyAppId">アプリを選択</label>
+                                        <select id="propertyAppId" class="app-dropdown kintone-app-select"></select>
+                                    </div>
+                                </div>
+                                
+                                <h4>オーナーID設定</h4>
+                                <div class="field-mappings" id="propertyOwnerIdMappings">
+                                    <!-- Property Owner ID field will be dynamically added here by JS -->
+                                </div>
+                                
+                                <h4>物件名設定</h4>
+                                <div class="field-mappings" id="propertyNameMappings">
+                                    <!-- Property Name field will be dynamically added here by JS -->
+                                </div>
+                                
+                                <h4>フィールドマッピング</h4>
+                                <div class="field-mappings" id="propertyFieldMappings">
+                                    <!-- Fields will be dynamically added here by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" id="plugin_cancel" class="btn btn-secondary">キャンセル</button>
+                <button type="button" id="plugin_submit" class="btn btn-primary">設定を保存</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

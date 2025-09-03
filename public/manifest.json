@@ -1,0 +1,38 @@
+{
+    "manifest_version": 1,
+    "version": "1.0.0",
+    "type": "APP",
+    "name": {
+        "ja": "BIダッシュボードプラグイン",
+        "en": "BI Dashboard Plugin"
+    },
+    "description": {
+        "ja": "財務指標を可視化するダッシュボードです。",
+        "en": "A dashboard to visualize financial metrics."
+    },
+    "homepage_url": {
+        "ja": "https://example.com",
+        "en": "https://example.com"
+    },
+    "icon": "image/icon.png",
+    "desktop": {
+        "js": [
+            "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js",
+            "desktop.js"
+        ],
+        "css": [
+            "css/plugin.css"
+        ]
+    },
+    "config": {
+        "html": "html/config.html",
+        "js": [
+            "https://code.jquery.com/jquery-3.7.1.min.js",
+            "js/config.js"
+        ],
+        "css": [
+            "css/config.css"
+        ],
+        "required_params": []
+    }
+}

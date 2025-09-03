@@ -1,0 +1,26 @@
+{
+  "name": "mock",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "vite build",
+    "build:plugin": "npm run build && npm run copy:plugin",
+    "copy:plugin": "node copy-plugin-files.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HBSdev0/Minorasu-Plugin-for-oner-Karte.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HBSdev0/Minorasu-Plugin-for-oner-Karte/issues"
+  },
+  "homepage": "https://github.com/HBSdev0/Minorasu-Plugin-for-oner-Karte#readme",
+  "description": "",
+  "devDependencies": {
+    "vite": "^5.3.4"
+  }
+}

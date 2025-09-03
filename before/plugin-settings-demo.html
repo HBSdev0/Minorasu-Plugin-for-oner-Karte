@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オーナーマスタ分析プラグイン - 設定画面</title>
+    <link rel="stylesheet" href="plugin-settings-demo.css">
+</head>
+<body>
+    <div class="plugin-container">
+        <header class="plugin-header">
+            <h1>オーナーマスタ分析プラグイン</h1>
+            <p class="subtitle">設定画面　構築サンプル</p>
+        </header>
+
+        <main class="plugin-main">
+            <div class="settings-section">
+                <h2>スペースフィールド設定</h2>
+                <div class="space-config">
+                    <div class="space-group">
+                        <label for="spaceId">スペースID</label>
+                        <input type="text" id="spaceId" class="space-input" placeholder="スペースIDを入力してください">
+                        <p class="help-text">プラグインを表示するスペースフィールドのスペースIDを入力してください</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>フィールドマッピング設定</h2>
+                
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" onclick="showTab('tab1')">①オーナーマスタ</button>
+                        <button class="tab-button" onclick="showTab('tab2')">②物件マスタ</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="tab1" class="tab-pane active">
+                            <div class="mapping-group">
+                                <h3>オーナーマスタ の設定</h3>
+                                
+                                <div class="app-selection">
+                                    <div class="app-group">
+                                        <label for="app1">アプリを選択</label>
+                                        <select id="app1" class="app-dropdown">
+                                            <option value="">アプリを選択してください</option>
+                                            <option value="app001">オーナー管理アプリ</option>
+                                            <option value="app002">賃料管理アプリ</option>
+                                            <option value="app003">経費管理アプリ</option>
+                                            <option value="app004">税務管理アプリ</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <h4>オーナーID設定</h4>
+                                <div class="field-mappings">
+                                    <div class="field-mapping">
+                                        <label>オーナーID</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="owner_id_001">オーナーID</option>
+                                            <option value="owner_id_002">オーナー番号</option>
+                                            <option value="owner_id_003">オーナーコード</option>
+                                            <option value="owner_id_004">管理番号</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <h4>フィールドマッピング</h4>
+                                <div class="field-mappings">
+                                    <div class="field-mapping">
+                                        <label>年賃料</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field001">年賃料</option>
+                                            <option value="field002">年間賃料収入</option>
+                                            <option value="field003">賃料年額</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>年管理費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field004">年管理費</option>
+                                            <option value="field005">年間管理費</option>
+                                            <option value="field006">管理費年額</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>土地固都税</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field007">土地固都税</option>
+                                            <option value="field008">土地固定資産税</option>
+                                            <option value="field009">土地税額</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>建物固都税</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field010">建物固都税</option>
+                                            <option value="field011">建物固定資産税</option>
+                                            <option value="field012">建物税額</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>長期修繕契約経費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field013">長期修繕契約経費</option>
+                                            <option value="field014">修繕契約費</option>
+                                            <option value="field015">長期修繕費</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>メンテナンス計画経費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field016">メンテナンス計画経費</option>
+                                            <option value="field017">メンテ計画費</option>
+                                            <option value="field018">メンテ経費</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>借入金利息</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field019">借入金利息</option>
+                                            <option value="field020">借入利息</option>
+                                            <option value="field021">利息費用</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>減価償却費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field022">減価償却費</option>
+                                            <option value="field023">償却費</option>
+                                            <option value="field024">減価償却</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>保険料年額</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field025">保険料年額</option>
+                                            <option value="field026">年間保険料</option>
+                                            <option value="field027">保険料</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tab2" class="tab-pane">
+                            <div class="mapping-group">
+                                <h3>物件マスタの設定</h3>
+                                
+                                <div class="app-selection">
+                                    <div class="app-group">
+                                        <label for="app2">アプリを選択</label>
+                                        <select id="app2" class="app-dropdown">
+                                            <option value="">アプリを選択してください</option>
+                                            <option value="app005">オーナー基本情報アプリ</option>
+                                            <option value="app006">収支管理アプリ</option>
+                                            <option value="app007">資産評価アプリ</option>
+                                            <option value="app008">修繕管理アプリ</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <h4>オーナーID設定</h4>
+                                <div class="field-mappings">
+                                    <div class="field-mapping">
+                                        <label>オーナーID</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="owner_id_005">オーナーID</option>
+                                            <option value="owner_id_006">オーナー番号</option>
+                                            <option value="owner_id_007">オーナーコード</option>
+                                            <option value="owner_id_008">管理番号</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <h4>フィールドマッピング</h4>
+                                <div class="field-mappings">
+                                    <div class="field-mapping">
+                                        <label>固都税</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field028">固都税</option>
+                                            <option value="field029">固定資産税</option>
+                                            <option value="field030">税額</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>管理料</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field031">管理料</option>
+                                            <option value="field032">管理費</option>
+                                            <option value="field033">管理手数料</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>建物修繕費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field034">建物修繕費</option>
+                                            <option value="field035">修繕費</option>
+                                            <option value="field036">建物修繕</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>原状回復費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field037">原状回復費</option>
+                                            <option value="field038">回復費</option>
+                                            <option value="field039">原状回復</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>メンテ経費</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field040">メンテ経費</option>
+                                            <option value="field041">メンテナンス経費</option>
+                                            <option value="field042">メンテ費用</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>実質収入</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field043">実質収入</option>
+                                            <option value="field044">実収入</option>
+                                            <option value="field045">純収入</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>満室賃料</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field046">満室賃料</option>
+                                            <option value="field047">満室時賃料</option>
+                                            <option value="field048">理想賃料</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>実勢価格</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field049">実勢価格</option>
+                                            <option value="field050">市場価格</option>
+                                            <option value="field051">時価</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>収支</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field052">収支</option>
+                                            <option value="field053">収支状況</option>
+                                            <option value="field054">収支結果</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="field-mapping">
+                                        <label>相続税評価額</label>
+                                        <select class="field-dropdown">
+                                            <option value="">フィールドを選択</option>
+                                            <option value="field055">相続税評価額</option>
+                                            <option value="field056">相続税評価</option>
+                                            <option value="field057">評価額</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="btn btn-secondary" onclick="resetSettings()">リセット</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // タブ切り替え機能
+        function showTab(tabName) {
+            // すべてのタブペインを非表示
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // すべてのタブボタンからactiveクラスを削除
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 選択されたタブを表示
+            document.getElementById(tabName).classList.add('active');
+            
+            // クリックされたボタンにactiveクラスを追加
+            event.target.classList.add('active');
+        }
+        
+        // 簡単なJavaScript（テキトウな実装）
+        function saveSettings() {
+            const spaceId = document.getElementById('spaceId').value;
+            if (!spaceId.trim()) {
+                alert('スペースIDを入力してください');
+                return;
+            }
+            alert('設定を保存しました！');
+        }
+        
+        function resetSettings() {
+            if (confirm('設定をリセットしますか？')) {
+                // スペースIDをリセット
+                document.getElementById('spaceId').value = '';
+                // ドロップダウンをリセット
+                document.querySelectorAll('select').forEach(select => {
+                    select.selectedIndex = 0;
+                });
+                alert('設定をリセットしました！');
+            }
+        }
+        
+        // アプリ選択時の処理（テキトウ）
+        document.getElementById('app1').addEventListener('change', function() {
+            console.log('アプリ1が選択されました:', this.value);
+        });
+        
+        document.getElementById('app2').addEventListener('change', function() {
+            console.log('アプリ2が選択されました:', this.value);
+        });
+    </script>
+</body>
+</html>
