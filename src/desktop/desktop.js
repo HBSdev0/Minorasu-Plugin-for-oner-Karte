@@ -661,6 +661,8 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
 
     const roaCurrent = totalInheritanceValue > 0 ? (totalIncome / totalInheritanceValue) * 100 : 0;
     const operatingCostCurrent = totalFullRent > 0 ? (totalOperatingCost / totalFullRent) * 100 : 0;
+    // 資産効率(現状) = 実勢価格合計 ÷ 相続税評価額合計 × 100
+    const assetEfficiencyCurrent = totalInheritanceValue > 0 ? (totalMarketPrice / totalInheritanceValue) * 100 : 0;
     
     // NOI率の計算: (NOI / 満室賃料) * 100
     const totalNoi = totalIncome - totalOperatingCost;
@@ -698,7 +700,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
 
 
     return {
-        assetEfficiency: { current: roaCurrent, average: allOwnersAverages.assetEfficiency, forecast: roaCurrent },
+        assetEfficiency: { current: assetEfficiencyCurrent, average: allOwnersAverages.assetEfficiency, forecast: assetEfficiencyCurrent },
         roa: { current: roaCurrent, average: allOwnersAverages.roa, forecast: roaCurrent },
         incomeTax: { current: incomeTaxRate, average: allOwnersAverages.incomeTax, forecast: incomeTaxRate },
         inheritanceTax: { current: inheritanceTaxRateValue, average: allOwnersAverages.inheritanceTax, forecast: inheritanceTaxRateValue },

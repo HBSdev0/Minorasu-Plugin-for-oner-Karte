@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>BI Dashboard Plugin Settings</title>
+    <link rel="stylesheet" href="../css/config.css">
 </head>
 <body>
     <div class="plugin-container">
@@ -87,6 +88,63 @@
                                     <!-- Fields will be dynamically added here by JS -->
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>成績基準設定</h2>
+                <p class="help-text">各指標の成績評価基準を設定できます。成績は1（低い）から5（高い）の5段階で評価されます。</p>
+                
+                <div class="grade-settings">
+                    <div class="metric-group">
+                        <h3>資産効率 (%)</h3>
+                        <p class="metric-description">高いほど良い指標：実勢価格 ÷ 相続税評価額 × 100</p>
+                        
+                        <div class="grade-table" id="assetEfficiency_grade_table">
+                            <div class="grade-ranges" id="assetEfficiency_grade_ranges"></div>
+                            <button type="button" class="add-range-btn" data-metric="assetEfficiency">範囲を追加</button>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <h3>ROA (%)</h3>
+                        <p class="metric-description">高いほど良い指標：収支 ÷ 相続税評価額 × 100</p>
+                        
+                        <div class="grade-table" id="roa_grade_table">
+                            <div class="grade-ranges" id="roa_grade_ranges"></div>
+                            <button type="button" class="add-range-btn" data-metric="roa">範囲を追加</button>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <h3>所得税率 (%)</h3>
+                        <p class="metric-description">低いほど良い指標：税率が低いほど高評価</p>
+                        
+                        <div class="grade-table" id="incomeTax_grade_table">
+                            <div class="grade-ranges" id="incomeTax_grade_ranges"></div>
+                            <button type="button" class="add-range-btn" data-metric="incomeTax">範囲を追加</button>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <h3>運営コスト率 (%)</h3>
+                        <p class="metric-description">低いほど良い指標：運営コスト ÷ 満室賃料 × 100</p>
+                        
+                        <div class="grade-table" id="operatingCost_grade_table">
+                            <div class="grade-ranges" id="operatingCost_grade_ranges"></div>
+                            <button type="button" class="add-range-btn" data-metric="operatingCost">範囲を追加</button>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <h3>NOI率 (%)</h3>
+                        <p class="metric-description">高いほど良い指標：NOI ÷ 満室賃料 × 100</p>
+                        
+                        <div class="grade-table" id="noi_grade_table">
+                            <div class="grade-ranges" id="noi_grade_ranges"></div>
+                            <button type="button" class="add-range-btn" data-metric="noi">範囲を追加</button>
                         </div>
                     </div>
                 </div>

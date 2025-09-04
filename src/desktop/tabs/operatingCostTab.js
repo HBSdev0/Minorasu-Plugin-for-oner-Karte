@@ -123,6 +123,9 @@ export function createOperatingCostTab(appData) {
             <!-- トップ表/チャート連携用（非表示） -->
             <input type="number" id="operatingCostCurrent" value="${initial.current}" min="0" max="100" step="0.1" style="display:none;">
             <input type="number" id="operatingCostForecast" value="${initial.forecast}" min="0" max="100" step="0.1" style="display:none;">
+            <!-- NOI率 連動用（非表示） -->
+            <input type="number" id="noiCurrent" value="0.0" min="0" max="100" step="0.1" style="display:none;">
+            <input type="number" id="noiForecast" value="0.0" min="0" max="100" step="0.1" style="display:none;">
         </div>
     `;
 
@@ -242,6 +245,17 @@ export function createOperatingCostTab(appData) {
         if (hiddenForecast) {
             hiddenForecast.value = forecastRate.toFixed(1);
             hiddenForecast.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        // NOI率のトップ連携
+        const hiddenNoiCurrent = document.getElementById('noiCurrent');
+        const hiddenNoiForecast = document.getElementById('noiForecast');
+        if (hiddenNoiCurrent) {
+            hiddenNoiCurrent.value = currentNoiRate.toFixed(1);
+            hiddenNoiCurrent.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (hiddenNoiForecast) {
+            hiddenNoiForecast.value = forecastNoiRate.toFixed(1);
+            hiddenNoiForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 

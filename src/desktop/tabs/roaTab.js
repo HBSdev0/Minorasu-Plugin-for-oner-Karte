@@ -96,8 +96,12 @@ export function createRoaTab(appData) {
             </div>
 
             <!-- トップ表/チャート連携用（非表示） -->
-            <input type="number" id="roaCurrent" value="${initial.current}" min="0" max="50" step="0.1" style="display:none;">
-            <input type="number" id="roaForecast" value="${initial.forecast}" min="0" max="50" step="0.1" style="display:none;">
+            <!-- ROA（%） -->
+            <input type="number" id="roaCurrent" value="${initial.current}" min="0" max="999" step="0.1" style="display:none;">
+            <input type="number" id="roaForecast" value="${initial.forecast}" min="0" max="999" step="0.1" style="display:none;">
+            <!-- 資産効率（%） -->
+            <input type="number" id="assetEfficiencyCurrent" value="0" min="0" max="999" step="0.1" style="display:none;">
+            <input type="number" id="assetEfficiencyForecast" value="0" min="0" max="999" step="0.1" style="display:none;">
         </div>
     `;
 
@@ -178,15 +182,27 @@ export function createRoaTab(appData) {
         document.getElementById('roaTblForecastRoa').value = forecastRoa.toFixed(1);
         
         // トップ連携: 隠し number 入力を更新し input イベントを発火
-        const hiddenCurrent = document.getElementById('roaCurrent');
-        const hiddenForecast = document.getElementById('roaForecast');
-        if (hiddenCurrent) {
-            hiddenCurrent.value = currentRoa.toFixed(1);
-            hiddenCurrent.dispatchEvent(new Event('input', { bubbles: true }));
+        // 1) ROA
+        const hiddenRoaCurrent = document.getElementById('roaCurrent');
+        const hiddenRoaForecast = document.getElementById('roaForecast');
+        if (hiddenRoaCurrent) {
+            hiddenRoaCurrent.value = currentRoa.toFixed(1);
+            hiddenRoaCurrent.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        if (hiddenForecast) {
-            hiddenForecast.value = forecastRoa.toFixed(1);
-            hiddenForecast.dispatchEvent(new Event('input', { bubbles: true }));
+        if (hiddenRoaForecast) {
+            hiddenRoaForecast.value = forecastRoa.toFixed(1);
+            hiddenRoaForecast.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        // 2) 資産効率
+        const hiddenAeCurrent = document.getElementById('assetEfficiencyCurrent');
+        const hiddenAeForecast = document.getElementById('assetEfficiencyForecast');
+        if (hiddenAeCurrent) {
+            hiddenAeCurrent.value = currentAssetEfficiency.toFixed(1);
+            hiddenAeCurrent.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (hiddenAeForecast) {
+            hiddenAeForecast.value = forecastAssetEfficiency.toFixed(1);
+            hiddenAeForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 
