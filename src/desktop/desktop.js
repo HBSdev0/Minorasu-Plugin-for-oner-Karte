@@ -240,8 +240,8 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
           try {
             console.log('BI Dashboard Plugin: 全オーナーデータの並列取得を開始');
             
-            // 並列で全レコードを取得（バッチサイズを調整）
-            const allData = await fetchAllRecordsParallel([ownerAppId, propertyAppId], queries, 500);
+            // 並列で全レコードを取得（queriesは空にして全レコードを取得）
+            const allData = await fetchAllRecordsParallel([ownerAppId, propertyAppId], {}, 500);
             
             return {
               owners: allData[ownerAppId]?.records || [],
@@ -434,6 +434,14 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
         const ownerRoa = ownerTotalInheritanceValue > 0 ? (ownerTotalIncome / ownerTotalInheritanceValue) * 100 : 0;
         const ownerOperatingCostRate = ownerTotalFullRent > 0 ? (ownerTotalOperatingCost / ownerTotalFullRent) * 100 : 0;
         
+        // 資産効率の計算（実勢価格の合計 ÷ 相続税評価額の合計 × 100）
+        let ownerTotalMarketPrice = 0;
+        ownerProperties.forEach(prop => {
+          const propMarketPrice = parseFloat(prop[config.propMarketPrice]?.value || 0);
+          ownerTotalMarketPrice += propMarketPrice;
+        });
+        const ownerAssetEfficiency = ownerTotalInheritanceValue > 0 ? (ownerTotalMarketPrice / ownerTotalInheritanceValue) * 100 : 0;
+        
         // NOI率の計算
         const ownerNoi = ownerTotalIncome - ownerTotalOperatingCost;
         const ownerNoiRate = ownerTotalFullRent > 0 ? (ownerNoi / ownerTotalFullRent) * 100 : 0;
@@ -468,6 +476,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
         const ownerBorrowingRate = parseFloat(normalizedOwner?.borrowing_rate?.value || 0);
         
         allOwnerMetrics.push({
+          assetEfficiency: ownerAssetEfficiency,
           roa: ownerRoa,
           operatingCostRate: ownerOperatingCostRate,
           incomeTaxRate: ownerIncomeTaxRate,
@@ -479,6 +488,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
       
       // 平均値を計算（最適化版）
       const averages = {
+        assetEfficiency: 0,
         roa: 0,
         operatingCost: 0,
         incomeTax: 0,
@@ -490,6 +500,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
       if (allOwnerMetrics.length > 0) {
         // 一度のループで全合計を計算
         const totals = allOwnerMetrics.reduce((acc, m) => {
+          acc.assetEfficiency += m.assetEfficiency;
           acc.roa += m.roa;
           acc.operatingCost += m.operatingCostRate;
           acc.incomeTax += m.incomeTaxRate;
@@ -497,9 +508,10 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
           acc.borrowing += m.borrowingRate;
           acc.noi += m.noiRate;
           return acc;
-        }, { roa: 0, operatingCost: 0, incomeTax: 0, inheritanceTax: 0, borrowing: 0, noi: 0 });
+        }, { assetEfficiency: 0, roa: 0, operatingCost: 0, incomeTax: 0, inheritanceTax: 0, borrowing: 0, noi: 0 });
         
         const count = allOwnerMetrics.length;
+        averages.assetEfficiency = totals.assetEfficiency / count;
         averages.roa = totals.roa / count;
         averages.operatingCost = totals.operatingCost / count;
         averages.incomeTax = totals.incomeTax / count;
@@ -553,7 +565,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
 
 
     return {
-        assetEfficiency: { current: roaCurrent, average: allOwnersAverages.roa, forecast: roaCurrent },
+        assetEfficiency: { current: roaCurrent, average: allOwnersAverages.assetEfficiency, forecast: roaCurrent },
         roa: { current: roaCurrent, average: allOwnersAverages.roa, forecast: roaCurrent },
         incomeTax: { current: incomeTaxRate, average: allOwnersAverages.incomeTax, forecast: incomeTaxRate },
         inheritanceTax: { current: inheritanceTaxRateValue, average: allOwnersAverages.inheritanceTax, forecast: inheritanceTaxRateValue },

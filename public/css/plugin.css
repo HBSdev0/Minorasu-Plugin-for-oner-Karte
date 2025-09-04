@@ -279,7 +279,7 @@
     font-weight: 600;
     position: sticky;
     top: 0;
-    z-index: 10;
+
 }
 
 .bi-dashboard-plugin .roa-table .row-label {
@@ -288,7 +288,7 @@
     text-align: left;
     position: sticky;
     left: 0;
-    z-index: 5;
+
     min-width: 60px;
 }
 
@@ -345,7 +345,7 @@
     font-weight: 600;
     position: sticky;
     top: 0;
-    z-index: 10;
+
 }
 
 .bi-dashboard-plugin .roa-pivot-table input {
@@ -354,6 +354,17 @@
     border-radius: 2px;
     font-size: 9px;
     text-align: right;
+}
+
+.bi-dashboard-plugin .roa-pivot-table input[readonly] {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.bi-dashboard-plugin .roa-pivot-table input[readonly]:focus {
+    outline: none;
+    border-color: #d1d5db;
+    box-shadow: none;
 }
 
 .bi-dashboard-plugin .roa-pivot-table input:focus {
@@ -417,7 +428,7 @@
     font-weight: 600;
     position: sticky;
     top: 0;
-    z-index: 10;
+
 }
 
 .bi-dashboard-plugin .operating-cost-table .row-label,
@@ -427,7 +438,7 @@
     text-align: left;
     position: sticky;
     left: 0;
-    z-index: 5;
+
     min-width: 60px;
 }
 

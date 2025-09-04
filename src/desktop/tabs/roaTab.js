@@ -6,25 +6,37 @@ export function createRoaTab(appData) {
     root.dataset.tab = 'roa';
 
     // 物件ごとの行を生成
-    const propertyRows = propertyDetails.map((prop, i) => `
+    const propertyRows = propertyDetails.map((prop, i) => {
+        // 初期値を計算
+        const marketPrice = parseFloat(prop.market_price?.value || 0);
+        const income = parseFloat(prop.income?.value || 0);
+        const inheritanceValue = parseFloat(prop.inheritance_tax_value?.value || 0);
+        
+        // 資産効率 = 実勢価格 ÷ 相続税評価額 × 100
+        const assetEfficiency = inheritanceValue > 0 ? (marketPrice / inheritanceValue) * 100 : 0;
+        // ROA = 収支 ÷ 相続税評価額 × 100
+        const roa = inheritanceValue > 0 ? (income / inheritanceValue) * 100 : 0;
+        
+        return `
         <tr data-prop-index="${i}" data-scenario="current" class="readonly-row">
             <td rowspan="2">${prop.property_name?.value ?? ''}</td>
             <td>現状</td>
             <td><input type="text" id="roaProp_${i}_current_market" value="${prop.market_price?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_income" value="${prop.income?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="0.0" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_roa" value="0.0" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="${assetEfficiency.toFixed(1)}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_roa" value="${roa.toFixed(1)}" readonly></td>
         </tr>
         <tr data-prop-index="${i}" data-scenario="forecast">
             <td>試算</td>
             <td><input type="text" id="roaProp_${i}_forecast_market" value="${prop.market_price?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_income" value="${prop.income?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}"></td>
-            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="0.0" readonly></td>
-            <td><input type="text" id="roaProp_${i}_forecast_roa" value="0.0" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="${assetEfficiency.toFixed(1)}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_roa" value="${roa.toFixed(1)}" readonly></td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 
     root.innerHTML = `
         <div class="form-container">

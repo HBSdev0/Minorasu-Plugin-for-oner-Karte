@@ -1,0 +1,76 @@
+/**
+ * ============================================================================
+ * オーナーカルテ用試算ダッシュボード追加プラグイン
+ * ============================================================================
+ * 
+ * Copyright (c) 2025 ほっとビジネスサポート株式会社
+ * All rights reserved.
+ * 
+ * Website: https://hot-bs.co.jp/
+ * 
+ * This software is proprietary and confidential.
+ * 
+ * LICENSE TERMS AND CONDITIONS:
+ * 
+ * 1. GRANT OF LICENSE
+ *    Subject to the terms and conditions of this Agreement, you are granted
+ *    a limited, non-exclusive, non-transferable license to use this software
+ *    solely for your internal business purposes.
+ * 
+ * 2. RESTRICTIONS
+ *    You may not:
+ *    - Reverse engineer, decompile, or disassemble the software
+ *    - Modify, adapt, or create derivative works based on the software
+ *    - Remove or alter any proprietary notices or labels on the software
+ *    - Resell, redistribute, or transfer the software to any third party
+ *    - Use the software for any illegal or unauthorized purpose
+ *    - Attempt to gain unauthorized access to the software or its systems
+ * 
+ * 3. OWNERSHIP
+ *    This software and all intellectual property rights therein shall
+ *    remain the exclusive property of ほっとビジネスサポート株式会社.
+ *    You acknowledge that no title to the intellectual property in the
+ *    software is transferred to you.
+ * 
+ * 4. WARRANTY DISCLAIMER
+ *    THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+ *    EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *    PURPOSE. IN NO EVENT SHALL ほっとビジネスサポート株式会社 BE LIABLE
+ *    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ *    OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ *    OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ *    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ *    SUCH DAMAGE.
+ * 
+ * 5. TERMINATION
+ *    This license is effective until terminated. Your rights under this
+ *    license will terminate automatically without notice if you fail to
+ *    comply with any of its terms and conditions.
+ * 
+ * 6. GOVERNING LAW
+ *    This Agreement shall be governed by and construed in accordance
+ *    with the laws of Japan.
+ * 
+ * ============================================================================
+ * 
+ * Third-Party Libraries Used:
+ * 
+ * Chart.js (v4.4.3) - MIT License
+ * Copyright (c) 2013-2023 Chart.js Contributors
+ * https://github.com/chartjs/Chart.js
+ * 
+ * jQuery (v3.7.1) - MIT License
+ * Copyright (c) 2010-2023 jQuery Foundation, Inc.
+ * https://jquery.com/
+ * 
+ * ============================================================================
+ * 
+ * Build Date: ${BUILD_DATE}
+ * Author: ほっとビジネスサポート株式会社
+ * License: Proprietary Commercial License
+ * ============================================================================
+ */ 

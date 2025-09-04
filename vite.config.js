@@ -5,6 +5,18 @@ export default defineConfig({
   publicDir: 'public', // publicディレクトリを指定
   build: {
     outDir: 'dist',
+    minify: 'terser', // 難読化を有効化
+    terserOptions: {
+      compress: {
+        drop_console: false, // console.logを残す
+        drop_debugger: true,
+        pure_funcs: ['console.log'] // console.logは残すが、他のconsoleは削除
+      },
+      mangle: {
+        toplevel: true, // トップレベルの変数名を難読化
+        keep_fnames: false // 関数名も難読化
+      }
+    },
     lib: {
       entry: path.resolve(__dirname, 'src/desktop/desktop.js'),
       name: 'KintonePlugin',
