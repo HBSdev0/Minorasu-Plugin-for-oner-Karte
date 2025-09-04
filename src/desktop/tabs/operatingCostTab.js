@@ -144,7 +144,24 @@ export function createOperatingCostTab(appData) {
     function applyCommaFormatting(input) {
         const raw = (input.value || '').replace(/,/g, '');
         if (raw && !isNaN(raw)) {
-            input.value = formatNumber(raw);
+            // カーソル位置を保存
+            const cursorPosition = input.selectionStart;
+            const oldValue = input.value;
+            const newValue = formatNumber(raw);
+            
+            // 値が変更された場合のみ更新
+            if (oldValue !== newValue) {
+                input.value = newValue;
+                
+                // カーソル位置を調整（カンマの数の差を考慮）
+                const oldCommaCount = (oldValue.match(/,/g) || []).length;
+                const newCommaCount = (newValue.match(/,/g) || []).length;
+                const adjustedPosition = cursorPosition + (newCommaCount - oldCommaCount);
+                
+                // カーソル位置を復元
+                input.setSelectionRange(Math.max(0, Math.min(adjustedPosition, newValue.length)), 
+                                      Math.max(0, Math.min(adjustedPosition, newValue.length)));
+            }
         }
     }
 
