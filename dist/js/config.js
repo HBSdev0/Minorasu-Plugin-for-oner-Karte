@@ -178,14 +178,32 @@ jQuery.noConflict();
 
   function createGradeRangeElement(metric, minVal, minType, maxVal, maxType, gradeVal) {
     const $row = $('<div class="grade-range"></div>');
-    const $min = $('<input type="number" class="grade-min-input" step="0.1" placeholder="最小値">').val(minVal != null ? minVal : '');
+    const $reorder = $('<div class="reorder-buttons"></div>');
+    const $btnUp = $(`<button type="button" class="move-up-btn" data-metric="${metric}" title="上に移動">↑</button>`);
+    const $btnDown = $(`<button type="button" class="move-down-btn" data-metric="${metric}" title="下に移動">↓</button>`);
+    $reorder.append($btnUp, $btnDown);
+    const $min = $('<input type="text" class="grade-min-input" placeholder="下限なし">').val(minVal != null ? minVal : '');
     const $minType = $(`<select class="grade-min-type-select"><option value="gte">以上</option><option value="gt">超過</option></select>`).val(minType || 'gte');
-    const $max = $('<input type="number" class="grade-max-input" step="0.1" placeholder="最大値">').val(maxVal != null ? maxVal : '');
+    const $max = $('<input type="text" class="grade-max-input" placeholder="上限なし">').val(maxVal != null ? maxVal : '');
     const $maxType = $(`<select class="grade-max-type-select"><option value="lte">以下</option><option value="lt">未満</option></select>`).val(maxType || 'lt');
+    const minEmpty = (minVal === '' || minVal === null || typeof minVal === 'undefined');
+    const maxEmpty = (maxVal === '' || maxVal === null || typeof maxVal === 'undefined');
+    if (minEmpty) { $minType.prop('disabled', true).addClass('disabled-select'); }
+    if (maxEmpty) { $maxType.prop('disabled', true).addClass('disabled-select'); }
     const $grade = $('<input type="number" class="grade-value-input" step="1" min="1" max="10" placeholder="成績">').val(gradeVal != null ? gradeVal : '');
     const $remove = $(`<button type="button" class="remove-range-btn" data-metric="${metric}">削除</button>`);
-    $row.append($min, $minType, $max, $maxType, $('<span class="grade-text">の成績は</span>'), $grade, $remove);
+    $row.append($reorder, $min, $minType, $max, $maxType, $('<span class="grade-text">の成績は</span>'), $grade, $remove);
     return $row;
+  }
+
+  // 並べ替えボタンの無効/有効状態を更新（先頭の↑、末尾の↓を無効化）
+  function refreshReorderButtonStateByContainer($container) {
+    try {
+      const $rows = $container.find('.grade-range');
+      $rows.find('.move-up-btn, .move-down-btn').prop('disabled', false);
+      $rows.first().find('.move-up-btn').prop('disabled', true);
+      $rows.last().find('.move-down-btn').prop('disabled', true);
+    } catch (_) {}
   }
 
   function getDefaultLevelsFromLegacy(metric) {
@@ -207,9 +225,13 @@ jQuery.noConflict();
     const incL = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeLower') ? !!metricSettings.includeLower : true;
     const incU = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeUpper') ? !!metricSettings.includeUpper : false;
     levels.forEach(lv => {
-      const $row = createGradeRangeElement(metric, lv.min, incL ? 'gte' : 'gt', lv.max, incU ? 'lte' : 'lt', lv.grade);
+      const useMinType = (lv && (lv.minType === 'gte' || lv.minType === 'gt')) ? lv.minType : (incL ? 'gte' : 'gt');
+      const useMaxType = (lv && (lv.maxType === 'lte' || lv.maxType === 'lt')) ? lv.maxType : (incU ? 'lte' : 'lt');
+      const $row = createGradeRangeElement(metric, lv.min, useMinType, lv.max, useMaxType, lv.grade);
       $rowsContainer.append($row);
     });
+    // 初期表示時に端のボタンを無効化
+    refreshReorderButtonStateByContainer($rowsContainer);
   }
 
   function restoreGradeSettings() {
@@ -250,16 +272,19 @@ jQuery.noConflict();
 
       const levels = [];
       $(`#${metric}_grade_ranges .grade-range`).each(function() {
-        const minVal = parseFloat($(this).find('.grade-min-input').val());
-        const maxVal = parseFloat($(this).find('.grade-max-input').val());
+        const minRaw = $(this).find('.grade-min-input').val();
+        const maxRaw = $(this).find('.grade-max-input').val();
+        const minVal = (minRaw == null || String(minRaw).trim() === '') ? '' : String(minRaw).trim();
+        const maxVal = (maxRaw == null || String(maxRaw).trim() === '') ? '' : String(maxRaw).trim();
         const minType = $(this).find('.grade-min-type-select').val() || 'gte';
         const maxType = $(this).find('.grade-max-type-select').val() || 'lt';
+        const gradeRaw = $(this).find('.grade-value-input').val();
         levels.push({
-          min: isNaN(minVal) ? 0 : minVal,
-          max: isNaN(maxVal) ? 0 : maxVal,
+          min: minVal,
+          max: maxVal,
           minType: minType,
           maxType: maxType,
-          grade: parseInt($(this).find('.grade-value-input').val(), 10) || 0
+          grade: gradeRaw
         });
       });
 
@@ -656,10 +681,42 @@ jQuery.noConflict();
       const metric = $(this).data('metric');
       const $rows = $(`#${metric}_grade_ranges`);
       $rows.append(createGradeRangeElement(metric, '', 'gte', '', 'lt', ''));
+      refreshReorderButtonStateByContainer($rows);
     });
 
     $(document).on('click', '.remove-range-btn', function() {
       $(this).closest('.grade-range').remove();
+    });
+    // 並べ替え（上へ）
+    $(document).on('click', '.move-up-btn', function() {
+      const $row = $(this).closest('.grade-range');
+      const $prev = $row.prev('.grade-range');
+      if ($prev.length) {
+        $row.insertBefore($prev);
+      }
+      refreshReorderButtonStateByContainer($(this).closest('.grade-ranges'));
+    });
+
+    // 並べ替え（下へ）
+    $(document).on('click', '.move-down-btn', function() {
+      const $row = $(this).closest('.grade-range');
+      const $next = $row.next('.grade-range');
+      if ($next.length) {
+        $row.insertAfter($next);
+      }
+      refreshReorderButtonStateByContainer($(this).closest('.grade-ranges'));
+    });
+
+
+    // 空欄時は対応する演算子セレクトを無効化＋打ち消し線風スタイル
+    $(document).on('input', '.grade-min-input, .grade-max-input', function() {
+      const $row = $(this).closest('.grade-range');
+      const isMinEmpty = String($row.find('.grade-min-input').val() || '').trim() === '';
+      const isMaxEmpty = String($row.find('.grade-max-input').val() || '').trim() === '';
+      const $minSel = $row.find('.grade-min-type-select');
+      const $maxSel = $row.find('.grade-max-type-select');
+      $minSel.prop('disabled', isMinEmpty).toggleClass('disabled-select', isMinEmpty);
+      $maxSel.prop('disabled', isMaxEmpty).toggleClass('disabled-select', isMaxEmpty);
     });
 
     $submitBtn.on('click', function() {
@@ -755,3 +812,7 @@ jQuery.noConflict();
   });
 
 })(jQuery);
+
+
+
+

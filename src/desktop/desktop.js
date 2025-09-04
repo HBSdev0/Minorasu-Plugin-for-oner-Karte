@@ -3,6 +3,7 @@ import { createOperatingCostTab } from './tabs/operatingCostTab.js';
 import { createIncomeTaxTab } from './tabs/incomeTaxTab.js';
 import { createInheritanceTaxTab } from './tabs/inheritanceTaxTab.js';
 import { createBorrowingTab } from './tabs/borrowingTab.js';
+import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModule, getMaxGradeScore as getMaxGradeScoreModule, calculateGrade as calculateGradeModule, getGradeThresholds as getGradeThresholdsModule } from './grade.mjs';
 
 (function() {
   'use strict';
@@ -29,136 +30,15 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
   let radarChart = null;
   let barChart = null;
   let compressionMode = false; // 圧縮モードの状態
-  let gradeMode = false; // ★成績表示モードの状態
+  let gradeMode = true; // ★成績表示モードの状態（デフォルトON）
 
-  // ★成績評価の基準値（デフォルト値、設定で上書き可能）
-  let GRADE_THRESHOLDS = {
-    assetEfficiency: [ // 資産効率: 高いほど良い
-      { score: 5, min: 120, max: Infinity },
-      { score: 4, min: 100, max: 120 },
-      { score: 3, min: 80, max: 100 },
-      { score: 2, min: 60, max: 80 },
-      { score: 1, min: -Infinity, max: 60 },
-    ],
-    roa: [ // ROA: 高いほど良い
-      { score: 5, min: 8, max: Infinity },
-      { score: 4, min: 6, max: 8 },
-      { score: 3, min: 4, max: 6 },
-      { score: 2, min: 2, max: 4 },
-      { score: 1, min: -Infinity, max: 2 },
-    ],
-    incomeTax: [ // 所得税率: 低いほど良い
-      { score: 5, min: -Infinity, max: 10 },
-      { score: 4, min: 10, max: 20 },
-      { score: 3, min: 20, max: 30 },
-      { score: 2, min: 30, max: 40 },
-      { score: 1, min: 40, max: Infinity },
-    ],
-    operatingCost: [ // 運営コスト率: 低いほど良い
-      { score: 5, min: -Infinity, max: 15 },
-      { score: 4, min: 15, max: 20 },
-      { score: 3, min: 20, max: 25 },
-      { score: 2, min: 25, max: 30 },
-      { score: 1, min: 30, max: Infinity },
-    ],
-    noi: [ // NOI率: 高いほど良い
-      { score: 5, min: 8, max: Infinity },
-      { score: 4, min: 6, max: 8 },
-      { score: 3, min: 4, max: 6 },
-      { score: 2, min: 2, max: 4 },
-      { score: 1, min: -Infinity, max: 2 },
-    ],
-  };
-
-  // ★設定から成績基準を更新する関数（動的段階・評価方向・境界含有に対応）
+  // ★設定から成績基準を更新する（モジュール版）
   function updateGradeThresholdsFromConfig() {
-    try {
-      // 新構造: gradeSettings（推奨）
-      if (config && config.gradeSettings) {
-        const settings = typeof config.gradeSettings === 'string' ? JSON.parse(config.gradeSettings) : config.gradeSettings;
-        console.log('Updating grade thresholds from gradeSettings:', settings);
-        Object.keys(settings || {}).forEach(metric => {
-          const mset = settings[metric];
-          if (!mset || !Array.isArray(mset.levels)) return;
-          const orientation = (mset.orientation === 'lower' || mset.orientation === 'higher') ? mset.orientation : 'higher';
-          const includeLower = (typeof mset.includeLower === 'boolean') ? mset.includeLower : true;
-          const includeUpper = (typeof mset.includeUpper === 'boolean') ? mset.includeUpper : false;
-
-          // レベルの整形と無限端の補完
-          let levels = mset.levels.map(l => {
-            const min = parseFloat(l.min);
-            const max = parseFloat(l.max);
-            return {
-              min: isNaN(min) ? -Infinity : min,
-              max: isNaN(max) ? Infinity : max,
-            };
-          }).filter(l => l.min !== undefined && l.max !== undefined);
-
-          // min昇順に整列（重複や交差の検証はしない）
-          levels.sort((a, b) => (a.min === b.min ? a.max - b.max : a.min - b.min));
-
-          const num = levels.length;
-          const thresholds = levels.map((l, idx) => {
-            const parsedGrade = parseInt(l.grade, 10);
-            const gradeFromLevel = Number.isFinite(parsedGrade) && parsedGrade > 0 ? parsedGrade : null;
-            const score = gradeFromLevel != null
-              ? gradeFromLevel
-              : ((orientation === 'higher') ? (idx + 1) : (num - idx));
-            return {
-              score: score,
-              min: l.min,
-              max: l.max,
-              includeLower: includeLower,
-              includeUpper: includeUpper,
-            };
-          });
-
-          GRADE_THRESHOLDS[metric] = thresholds;
-        });
-        console.log('Grade thresholds updated from gradeSettings');
-      } else if (config && config.gradeThresholds) {
-        // 旧構造: 固定5段階（後方互換）
-        console.log('Updating grade thresholds from legacy gradeThresholds:', config.gradeThresholds);
-        const savedThresholds = typeof config.gradeThresholds === 'string' ? JSON.parse(config.gradeThresholds) : config.gradeThresholds;
-        Object.keys(savedThresholds || {}).forEach(metric => {
-          if (!savedThresholds[metric]) return;
-          const grades = ['grade5', 'grade4', 'grade3', 'grade2', 'grade1'];
-          const scores = [5, 4, 3, 2, 1];
-          const thresholds = grades.map((g, i) => {
-            let min = parseFloat(savedThresholds[metric][g]?.min);
-            let max = parseFloat(savedThresholds[metric][g]?.max);
-            if (isNaN(min)) min = -Infinity;
-            if (isNaN(max)) max = Infinity;
-            if (max >= 999) max = Infinity;
-            if (min <= -999) min = -Infinity;
-            return { score: scores[i], min, max, includeLower: true, includeUpper: false };
-          });
-          GRADE_THRESHOLDS[metric] = thresholds;
-        });
-        console.log('Grade thresholds updated from legacy');
-      } else {
-        console.log('No grade settings found in config, using defaults');
-      }
-    } catch (error) {
-      console.error('Error updating grade thresholds from config:', error);
-      console.log('Using default grade thresholds');
-    }
+    updateGradeThresholdsFromConfigModule(config);
   }
 
-  // ★成績段階の最大スコアを取得（Y軸上限に利用）
-  function getMaxGradeScore() {
-    try {
-      const scores = Object.keys(GRADE_THRESHOLDS).map(k => {
-        const arr = Array.isArray(GRADE_THRESHOLDS[k]) ? GRADE_THRESHOLDS[k] : [];
-        const localMax = arr.reduce((m, t) => Math.max(m, Number.isFinite(t.score) ? t.score : 0), 0);
-        return localMax;
-      });
-      const max = Math.max(5, ...scores); // 既定で5
-      return isFinite(max) && max > 0 ? max : 5;
-    } catch (_) {
-      return 5;
-    }
-  }
+  // ★成績段階の最大スコアを取得（モジュール版）
+  function getMaxGradeScore() { return getMaxGradeScoreModule(); }
 
   // 汎用設定
   const METRICS = ['assetEfficiency','roa','incomeTax','operatingCost','noi'];
@@ -830,9 +710,10 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
                     <label for="compressionCheckbox">平均を1として比較する</label>
                 </div>
                 <div class="grade-control">
-                    <input type="checkbox" id="gradeCheckbox" class="grade-checkbox">
+                    <input type="checkbox" id="gradeCheckbox" class="grade-checkbox" checked>
                     <label for="gradeCheckbox">成績で表示する</label>
                 </div>
+                <button class="grade-info-button" title="成績基準を表示">ℹ</button>
             </div>
             <div class="chart-item">
                 <div id="radarChartContainer">
@@ -1011,6 +892,14 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
           toggleGradeMode();
       });
     });
+
+    // 成績基準モーダル
+    const infoBtn = document.querySelector('.grade-info-button');
+    if (infoBtn) {
+      infoBtn.addEventListener('click', () => {
+        openGradeInfoModal();
+      });
+    }
   }
 
   // タブ間連携（所得税タブ→トップ表/チャート）
@@ -1097,7 +986,7 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
             console.warn(`Missing value for ${k}.${field}:`, value);
             return 1;
           }
-          return calculateGrade(k, value);
+          return calculateGradeModule(k, value);
         });
         console.log('Grade mode values:', grades);
         return grades;
@@ -1225,23 +1114,146 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
     updateCharts();
   }
 
-  // ★数値を成績に変換する関数
-  function calculateGrade(metric, value) {
-    const thresholds = GRADE_THRESHOLDS[metric];
-    if (!thresholds) return 1; // デフォルトは1
-    
-    // 値の検証
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return 1;
-    
-    for (const threshold of thresholds) {
-      const incL = (typeof threshold.includeLower === 'boolean') ? threshold.includeLower : true;
-      const incU = (typeof threshold.includeUpper === 'boolean') ? threshold.includeUpper : false;
-      const lowerOk = incL ? (numValue >= threshold.min) : (numValue > threshold.min);
-      const upperOk = incU ? (numValue <= threshold.max) : (numValue < threshold.max);
-      if (lowerOk && upperOk) return threshold.score;
+  // ★数値を成績に変換する関数（モジュール版）
+  function calculateGrade(metric, value) { return calculateGradeModule(metric, value); }
+
+  // 成績基準モーダル生成
+  function openGradeInfoModal() {
+    try {
+      const thresholds = getReadableThresholds();
+      const overlay = document.createElement('div');
+      overlay.className = 'grade-info-overlay';
+      overlay.innerHTML = `
+        <div class="grade-info-modal">
+          <div class="grade-info-header">
+            <h3>成績基準一覧</h3>
+            <button class="grade-info-close" aria-label="閉じる">×</button>
+          </div>
+          <div class="grade-info-body">
+            ${renderThresholdTables(thresholds)}
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.querySelector('.grade-info-close')?.addEventListener('click', () => overlay.remove());
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    } catch (e) {
+      console.error('Failed to open grade info modal:', e);
     }
-    return 1; // どの範囲にも該当しない場合は1
+  }
+
+  function renderThresholdTables(map) {
+    const labelMap = {
+      assetEfficiency: '資産効率(%)',
+      roa: 'ROA(%)',
+      incomeTax: '所得税率(%)',
+      operatingCost: '運営コスト率(%)',
+      noi: 'NOI率(%)'
+    };
+    const legend = `<div class="grade-info-legend">
+      <p>上から順に適用されます。区間表記は [ を「含む」、( を「含まない」、] を「含む」、) を「含まない」と表します。</p>
+      <p>例: [10, 20) は「10以上 20未満」を意味します。</p>
+    </div>`;
+    const sections = Object.keys(map).map(k => {
+      const rows = map[k].map(r => {
+        const bracket = bracketify(r.min, r.max, r.includeLower, r.includeUpper);
+        const cond = conditionText(r.min, r.includeLower, r.max, r.includeUpper);
+        return `<tr>
+          <td><span class="grade-badge">${escapeHtml(r.gradeLabel)}</span></td>
+          <td>${bracket}</td>
+          <td>${cond}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="grade-info-section">
+        <h4>${labelMap[k] || k}</h4>
+        <table class="grade-info-table">
+          <thead><tr><th>成績</th><th>区間</th><th>条件</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+    return legend + sections;
+  }
+
+  function bracketify(min, max, incL, incU) {
+    const left = incL ? '[' : '(';
+    const right = incU ? ']' : ')';
+    return `${left}${formatNumber(min)}, ${formatNumber(max)}${right}`;
+  }
+
+  function conditionText(min, incL, max, incU) {
+    const toMin = incL ? '以上' : '超過';
+    const toMax = incU ? '以下' : '未満';
+    const isMinInf = (min === -Infinity);
+    const isMaxInf = (max === Infinity);
+    if (isMinInf && isMaxInf) return '制限なし';
+    if (isMinInf) return `${formatNumber(max)}${toMax}`;
+    if (isMaxInf) return `${formatNumber(min)}${toMin}`;
+    return `${formatNumber(min)}${toMin} かつ ${formatNumber(max)}${toMax}`;
+  }
+
+  function getReadableThresholds() {
+    const result = {};
+    const all = getGradeThresholdsSafe();
+    Object.keys(all).forEach(metric => {
+      const arr = Array.isArray(all[metric]) ? all[metric] : [];
+      result[metric] = arr.map(t => ({
+        gradeLabel: String(t.score ?? ''),
+        min: t.min,
+        max: t.max,
+        includeLower: Boolean(t.includeLower),
+        includeUpper: Boolean(t.includeUpper),
+      }));
+    });
+    return result;
+  }
+
+  function getGradeThresholdsSafe() {
+    try {
+      return getGradeThresholdsModule();
+    } catch (_) {
+      try {
+        const settingsRaw = (typeof config?.gradeSettings === 'string') ? JSON.parse(config.gradeSettings) : (config?.gradeSettings || {});
+        return reconstructThresholdsFromSettings(settingsRaw);
+      } catch (_) {
+        return {};
+      }
+    }
+  }
+
+  function reconstructThresholdsFromSettings(gradeSettings) {
+    const out = {};
+    const metrics = ['assetEfficiency','roa','incomeTax','operatingCost','noi'];
+    metrics.forEach(metric => {
+      const m = gradeSettings?.[metric];
+      if (!m || !Array.isArray(m.levels)) return;
+      const includeLower = (typeof m.includeLower === 'boolean') ? m.includeLower : true;
+      const includeUpper = (typeof m.includeUpper === 'boolean') ? m.includeUpper : false;
+      out[metric] = m.levels.map(l => ({
+        score: parseInt(l.grade, 10) || '',
+        min: parseBoundForDisplay(l.min, true),
+        max: parseBoundForDisplay(l.max, false),
+        includeLower: (l.minType === 'gte') ? true : (l.minType === 'gt') ? false : includeLower,
+        includeUpper: (l.maxType === 'lte') ? true : (l.maxType === 'lt') ? false : includeUpper,
+      }));
+    });
+    return out;
+  }
+
+  function parseBoundForDisplay(value, isMin) {
+    if (value === '' || value === null || value === undefined) return isMin ? -Infinity : Infinity;
+    const n = Number(value);
+    return isNaN(n) ? (isMin ? -Infinity : Infinity) : n;
+  }
+
+  function formatNumber(v) {
+    if (v === Infinity) return '∞';
+    if (v === -Infinity) return '-∞';
+    if (typeof v !== 'number') return String(v ?? '');
+    return Number.isInteger(v) ? String(v) : v.toFixed(2);
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
 
   // ★成績表示モード切り替え

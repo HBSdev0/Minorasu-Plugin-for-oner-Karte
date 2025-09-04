@@ -1,3 +1,34 @@
+/* 成績基準モーダル */
+.grade-info-button {
+  margin-left: 6px;
+  width: 20px; height: 20px;
+  padding: 0;
+  border: 1px solid #d0d5db; border-radius: 50%;
+  background: #fff; cursor: pointer; font-weight: 700; line-height: 18px; text-align: center; font-size: 12px;
+}
+.grade-info-button:hover { background: #f3f4f6; }
+
+.grade-info-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.grade-info-modal {
+  width: 800px; max-width: 90vw; max-height: 80vh;
+  background: #fff; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column;
+}
+.grade-info-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e9ecef; }
+.grade-info-header h3 { margin: 0; font-size: 16px; }
+.grade-info-close { border: none; background: transparent; cursor: pointer; font-size: 20px; line-height: 20px; }
+.grade-info-body { padding: 12px 16px; overflow: auto; }
+.grade-info-section { margin-bottom: 16px; }
+.grade-info-section h4 { margin: 8px 0; font-size: 14px; }
+.grade-info-table { width: 100%; border-collapse: collapse; }
+.grade-info-table th, .grade-info-table td { border: 1px solid #e1e5e9; padding: 6px 8px; text-align: center; }
+.grade-info-table thead th { background: #f8f9fa; }
+.grade-badge { display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 999px; background: #eef2ff; color: #4f46e5; font-weight: 700; }
 .bi-dashboard-plugin * {
     margin: 0;
     padding: 0;
@@ -8,7 +39,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f8f9fa;
     color: #333;
-    font-size: 11px;
+    font-size: 14px;
     overflow-y: scroll; /* 常時スクロールバーで幅安定 */
 }
 
@@ -64,7 +95,7 @@
 .bi-dashboard-plugin table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 13px;
 }
 
 .bi-dashboard-plugin th, td {
@@ -128,7 +159,7 @@
     border: 1px solid #d1d5db;
     border-radius: 3px;
     padding: 4px 8px;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -158,7 +189,7 @@
 .bi-dashboard-plugin .chart-item h3 {
     margin-bottom: 4px;
     color: #374151;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
 }
 
@@ -212,7 +243,7 @@
     color: #6b7280;
     padding: 6px 12px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 500;
     transition: all 0.2s;
 }
@@ -246,7 +277,7 @@
     color: #374151;
     border-bottom: 1px solid #e5e7eb;
     padding-bottom: 4px;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -261,7 +292,7 @@
 .bi-dashboard-plugin .roa-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9px;
+    font-size: 12px;
     min-width: 800px;
 }
 
@@ -297,7 +328,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 9px;
+    font-size: 12px;
     text-align: right;
 }
 
@@ -327,7 +358,7 @@
 .bi-dashboard-plugin .roa-pivot-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9px;
+    font-size: 12px;
     min-width: 800px;
 }
 
@@ -352,7 +383,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 9px;
+    font-size: 12px;
     text-align: right;
 }
 
@@ -407,7 +438,7 @@
 .bi-dashboard-plugin .operating-cost-pivot-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9px;
+    font-size: 12px;
     min-width: 1200px; /* 列が多いのでROAより広く */
 }
 
@@ -448,7 +479,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 9px;
+    font-size: 12px;
     text-align: right;
 }
 
@@ -558,19 +589,19 @@
 .bi-dashboard-plugin .formula-section h5 {
     margin: 0 0 6px 0;
     color: #374151;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .bi-dashboard-plugin .formula-content p {
     margin: 0 0 6px 0;
-    font-size: 9px;
+    font-size: 12px;
     color: #374151;
     font-weight: 500;
 }
 
 .bi-dashboard-plugin .formula-calculation {
-    font-size: 9px;
+    font-size: 12px;
     color: #1f2937;
     font-family: 'Courier New', monospace;
     background-color: #ffffff;
@@ -624,14 +655,14 @@
 .bi-dashboard-plugin .forecast-info h5 {
     margin: 0 0 6px 0;
     color: #374151;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .bi-dashboard-plugin .current-info p,
 .bi-dashboard-plugin .forecast-info p {
     margin: 2px 0;
-    font-size: 9px;
+    font-size: 12px;
     color: #374151;
 }
 
@@ -644,7 +675,7 @@
 .bi-dashboard-plugin .tax-rate-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9px;
+    font-size: 10px;
 }
 
 .bi-dashboard-plugin .tax-rate-table th,
@@ -693,14 +724,14 @@
     margin-bottom: 2px;
     font-weight: 500;
     color: #374151;
-    font-size: 9px;
+    font-size: 12px;
 }
 
 .bi-dashboard-plugin .form-group input {
     padding: 4px 6px;
     border: 1px solid #d1d5db;
     border-radius: 3px;
-    font-size: 10px;
+    font-size: 13px;
     background: #ffffff;
     transition: border-color 0.2s;
 }
@@ -718,7 +749,7 @@
     border: none;
     border-radius: 3px;
     padding: 6px 12px;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     margin-top: 6px;

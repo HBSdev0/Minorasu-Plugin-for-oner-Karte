@@ -474,11 +474,30 @@ body {
 .grade-range { display: flex; align-items: center; gap: 0.5rem; background: #fff; padding: 0.75rem; border-radius: 4px; border: 1px solid #e1e5e9; flex-wrap: wrap; }
 .grade-range input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100px; text-align: center; }
 .grade-range select { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
+.reorder-buttons { display: flex; flex-direction: column; gap: 4px; }
+.reorder-buttons .move-up-btn,
+.reorder-buttons .move-down-btn { width: 28px; height: 24px; line-height: 20px; padding: 0; border: 1px solid #ced4da; border-radius: 4px; background: #f8f9fa; cursor: pointer; }
+.reorder-buttons .move-up-btn:hover,
+.reorder-buttons .move-down-btn:hover { background: #e9ecef; }
+.reorder-buttons .move-up-btn:disabled,
+.reorder-buttons .move-down-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .grade-text { font-weight: 600; color: #2c3e50; white-space: nowrap; }
 .add-range-btn { background-color: #28a745; color: white; border: none; border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
 .add-range-btn:hover { background-color: #218838; }
 .remove-range-btn { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.8rem; }
 .remove-range-btn:hover { background-color: #c82333; }
+
+/* 空欄側の比較演算子を無効風に見せる */
+.grade-operator-inactive {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+/* MRADERCHARTに合わせた無効セレクトの見た目 */
+.disabled-select {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
 
 .grade-row label {
     font-weight: 500;
@@ -504,3 +523,4 @@ body {
     color: #6c757d;
     font-size: 0.9rem;
 }
+
