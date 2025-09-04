@@ -49,6 +49,45 @@ jQuery.noConflict();
     propInheritanceTaxVal: '相続税評価額',
   };
 
+  // ★成績基準のデフォルト値
+  const DEFAULT_GRADE_THRESHOLDS = {
+    assetEfficiency: {
+      grade5: { min: 120, max: 999 },
+      grade4: { min: 100, max: 120 },
+      grade3: { min: 80, max: 100 },
+      grade2: { min: 60, max: 80 },
+      grade1: { min: 0, max: 60 }
+    },
+    roa: {
+      grade5: { min: 8, max: 100 },
+      grade4: { min: 6, max: 8 },
+      grade3: { min: 4, max: 6 },
+      grade2: { min: 2, max: 4 },
+      grade1: { min: 0, max: 2 }
+    },
+    incomeTax: {
+      grade5: { min: 0, max: 10 },
+      grade4: { min: 10, max: 20 },
+      grade3: { min: 20, max: 30 },
+      grade2: { min: 30, max: 40 },
+      grade1: { min: 40, max: 100 }
+    },
+    operatingCost: {
+      grade5: { min: 0, max: 15 },
+      grade4: { min: 15, max: 20 },
+      grade3: { min: 20, max: 25 },
+      grade2: { min: 25, max: 30 },
+      grade1: { min: 30, max: 100 }
+    },
+    noi: {
+      grade5: { min: 8, max: 100 },
+      grade4: { min: 6, max: 8 },
+      grade3: { min: 4, max: 6 },
+      grade2: { min: 2, max: 4 },
+      grade1: { min: 0, max: 2 }
+    }
+  };
+
   // タブ切り替え
   $('.tab-button').on('click', function() {
     const tabName = $(this).data('tab');
@@ -57,6 +96,105 @@ jQuery.noConflict();
     $('.tab-pane').removeClass('active');
     $(`#${tabName}Tab`).addClass('active');
   });
+
+  // ★成績（動的UI）用の共通定義とユーティリティ
+  const METRICS_FOR_GRADES = ['assetEfficiency', 'roa', 'incomeTax', 'operatingCost', 'noi'];
+
+  function createGradeRangeElement(metric, minVal, minType, maxVal, maxType, gradeVal) {
+    const $row = $('<div class="grade-range"></div>');
+    const $min = $('<input type="number" class="grade-min-input" step="0.1" placeholder="最小値">').val(minVal != null ? minVal : '');
+    const $minType = $(`<select class="grade-min-type-select"><option value="gte">以上</option><option value="gt">超過</option></select>`).val(minType || 'gte');
+    const $max = $('<input type="number" class="grade-max-input" step="0.1" placeholder="最大値">').val(maxVal != null ? maxVal : '');
+    const $maxType = $(`<select class="grade-max-type-select"><option value="lte">以下</option><option value="lt">未満</option></select>`).val(maxType || 'lt');
+    const $grade = $('<input type="number" class="grade-value-input" step="1" min="1" max="10" placeholder="成績">').val(gradeVal != null ? gradeVal : '');
+    const $remove = $(`<button type="button" class="remove-range-btn" data-metric="${metric}">削除</button>`);
+    $row.append($min, $minType, $max, $maxType, $('<span class="grade-text">の成績は</span>'), $grade, $remove);
+    return $row;
+  }
+
+  function getDefaultLevelsFromLegacy(metric) {
+    const grades = ['grade5','grade4','grade3','grade2','grade1'];
+    const defaults = DEFAULT_GRADE_THRESHOLDS[metric] || {};
+    return grades.map(g => ({
+      min: defaults[g] ? defaults[g].min : 0,
+      max: defaults[g] ? defaults[g].max : 0
+    }));
+  }
+
+  function renderMetricGradeUI(metric, metricSettings) {
+    const $rowsContainer = $(`#${metric}_grade_ranges`);
+    const includeLower = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeLower') ? !!metricSettings.includeLower : true; // 既定は下限含む
+    const includeUpper = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeUpper') ? !!metricSettings.includeUpper : false; // 既定は上限含まない
+
+    $rowsContainer.empty();
+    const levels = (metricSettings && Array.isArray(metricSettings.levels)) ? metricSettings.levels : getDefaultLevelsFromLegacy(metric);
+    const incL = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeLower') ? !!metricSettings.includeLower : true;
+    const incU = metricSettings && Object.prototype.hasOwnProperty.call(metricSettings, 'includeUpper') ? !!metricSettings.includeUpper : false;
+    levels.forEach(lv => {
+      const $row = createGradeRangeElement(metric, lv.min, incL ? 'gte' : 'gt', lv.max, incU ? 'lte' : 'lt', lv.grade);
+      $rowsContainer.append($row);
+    });
+  }
+
+  function restoreGradeSettings() {
+    let gradeSettings = null;
+    try {
+      if (config && config.gradeSettings) {
+        gradeSettings = typeof config.gradeSettings === 'string' ? JSON.parse(config.gradeSettings) : config.gradeSettings;
+      } else if (config && config.gradeThresholds) {
+        // 後方互換: 旧固定5段階から変換
+        const old = typeof config.gradeThresholds === 'string' ? JSON.parse(config.gradeThresholds) : config.gradeThresholds;
+        gradeSettings = {};
+        METRICS_FOR_GRADES.forEach(metric => {
+          const m = old && old[metric] ? old[metric] : null;
+          const levels = m ? ['grade5','grade4','grade3','grade2','grade1'].map(k => ({ min: m[k]?.min ?? 0, max: m[k]?.max ?? 0 })) : getDefaultLevelsFromLegacy(metric);
+          gradeSettings[metric] = {
+            includeLower: true,
+            includeUpper: false,
+            levels: levels
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to parse grade settings. Using defaults.', e);
+      gradeSettings = null;
+    }
+
+    METRICS_FOR_GRADES.forEach(metric => {
+      const mset = gradeSettings && gradeSettings[metric] ? gradeSettings[metric] : null;
+      renderMetricGradeUI(metric, mset);
+    });
+  }
+
+  function collectGradeSettings() {
+    const settings = {};
+    METRICS_FOR_GRADES.forEach(metric => {
+      const includeLower = true;
+      const includeUpper = false;
+
+      const levels = [];
+      $(`#${metric}_grade_ranges .grade-range`).each(function() {
+        const minVal = parseFloat($(this).find('.grade-min-input').val());
+        const maxVal = parseFloat($(this).find('.grade-max-input').val());
+        const minType = $(this).find('.grade-min-type-select').val() || 'gte';
+        const maxType = $(this).find('.grade-max-type-select').val() || 'lt';
+        levels.push({
+          min: isNaN(minVal) ? 0 : minVal,
+          max: isNaN(maxVal) ? 0 : maxVal,
+          minType: minType,
+          maxType: maxType,
+          grade: parseInt($(this).find('.grade-value-input').val(), 10) || 0
+        });
+      });
+
+      settings[metric] = {
+        includeLower: includeLower,
+        includeUpper: includeUpper,
+        levels: levels
+      };
+    });
+    return settings;
+  }
 
   // 自アプリのフィールドを取得してセレクトボックスを生成
   function setCurrentAppFieldDropdown() {
@@ -274,26 +412,124 @@ jQuery.noConflict();
         populateFieldMappings(config.propertyAppId, $propertyFieldMappings, propertyFieldMapWithoutIdAndName);
       }
     }
+
+    // ★成績基準設定の復元（動的UI）
+    restoreGradeSettings();
+  }
+
+  // ★成績基準設定を復元する
+  function restoreGradeThresholds() {
+    const metrics = ['assetEfficiency', 'roa', 'incomeTax', 'operatingCost', 'noi'];
+    const grades = ['grade5', 'grade4', 'grade3', 'grade2', 'grade1'];
+
+    let gradeConfig = DEFAULT_GRADE_THRESHOLDS;
+    if (config && config.gradeThresholds) {
+      try {
+        gradeConfig = typeof config.gradeThresholds === 'string'
+          ? JSON.parse(config.gradeThresholds)
+          : config.gradeThresholds;
+      } catch (e) {
+        console.warn('Failed to parse gradeThresholds. Using defaults.', e);
+        gradeConfig = DEFAULT_GRADE_THRESHOLDS;
+      }
+    }
+
+    metrics.forEach(metric => {
+      grades.forEach(grade => {
+        const savedThresholds = gradeConfig && gradeConfig[metric] && gradeConfig[metric][grade];
+        const defaultThresholds = DEFAULT_GRADE_THRESHOLDS[metric][grade];
+
+        const minValue = savedThresholds ? savedThresholds.min : defaultThresholds.min;
+        const maxValue = savedThresholds ? savedThresholds.max : defaultThresholds.max;
+
+        $(`#${metric}_${grade}_min`).val(minValue);
+        $(`#${metric}_${grade}_max`).val(maxValue);
+      });
+    });
   }
 
   // フォームから設定を収集
   function collectConfig() {
     const newConfig = {
-      spaceId: $spaceId.val(),
-      currentAppOwnerId: $currentAppOwnerId.val(),
-      ownerAppId: $ownerAppId.val(),
-      propertyAppId: $propertyAppId.val(),
+      spaceId: $spaceId.val() || '',
+      currentAppOwnerId: $currentAppOwnerId.val() || '',
+      ownerAppId: $ownerAppId.val() || '',
+      propertyAppId: $propertyAppId.val() || '',
     };
 
     $('.kintone-field-select').each(function() {
       const $this = $(this);
       const key = $this.data('key');
       if (key) {
-        newConfig[key] = $this.val();
+        newConfig[key] = $this.val() || '';
+      }
+    });
+
+    // ★成績基準設定（動的UI）を収集（保存時は文字列化）
+    newConfig.gradeSettings = JSON.stringify(collectGradeSettings());
+
+    // setConfigに渡す値は全て文字列に統一
+    Object.keys(newConfig).forEach(function(key) {
+      if (typeof newConfig[key] !== 'string') {
+        newConfig[key] = String(newConfig[key] == null ? '' : newConfig[key]);
       }
     });
 
     return newConfig;
+  }
+
+  // ★成績基準設定を収集する
+  function collectGradeThresholds() {
+    const thresholds = {};
+    const metrics = ['assetEfficiency', 'roa', 'incomeTax', 'operatingCost', 'noi'];
+    const grades = ['grade5', 'grade4', 'grade3', 'grade2', 'grade1'];
+    
+    console.log('Collecting grade thresholds...');
+    
+    metrics.forEach(metric => {
+      thresholds[metric] = {};
+      grades.forEach(grade => {
+        const minSelector = `#${metric}_${grade}_min`;
+        const maxSelector = `#${metric}_${grade}_max`;
+        
+        const $minElement = $(minSelector);
+        const $maxElement = $(maxSelector);
+        
+        console.log(`Checking elements: ${minSelector} (exists: ${$minElement.length > 0}), ${maxSelector} (exists: ${$maxElement.length > 0})`);
+        
+        // 要素が存在しない場合はデフォルト値を使用
+        let minInput, maxInput;
+        if ($minElement.length > 0) {
+          minInput = $minElement.val();
+        } else {
+          console.warn(`Element not found: ${minSelector}`);
+          minInput = DEFAULT_GRADE_THRESHOLDS[metric] && DEFAULT_GRADE_THRESHOLDS[metric][grade] ? DEFAULT_GRADE_THRESHOLDS[metric][grade].min : 0;
+        }
+        
+        if ($maxElement.length > 0) {
+          maxInput = $maxElement.val();
+        } else {
+          console.warn(`Element not found: ${maxSelector}`);
+          maxInput = DEFAULT_GRADE_THRESHOLDS[metric] && DEFAULT_GRADE_THRESHOLDS[metric][grade] ? DEFAULT_GRADE_THRESHOLDS[metric][grade].max : 0;
+        }
+        
+        console.log(`${metric}_${grade}: minInput=${minInput}, maxInput=${maxInput}`);
+        
+        // parseFloatでNaNにならないように適切に処理
+        const minVal = (typeof minInput === 'string' || typeof minInput === 'number') && !isNaN(parseFloat(minInput)) ? parseFloat(minInput) : 0;
+        const maxVal = (typeof maxInput === 'string' || typeof maxInput === 'number') && !isNaN(parseFloat(maxInput)) ? parseFloat(maxInput) : 0;
+        
+        thresholds[metric][grade] = {
+          min: minVal,
+          max: maxVal
+        };
+        
+        console.log(`${metric}_${grade}: final values min=${minVal}, max=${maxVal}`);
+      });
+    });
+    
+    console.log('Final thresholds object:', thresholds);
+    return thresholds;
   }
 
   // 保存・キャンセルのイベントハンドラ
@@ -339,6 +575,17 @@ jQuery.noConflict();
         }
     });
 
+    // 成績行の追加/削除（動的UI）
+    $(document).on('click', '.add-range-btn', function() {
+      const metric = $(this).data('metric');
+      const $rows = $(`#${metric}_grade_ranges`);
+      $rows.append(createGradeRangeElement(metric, '', 'gte', '', 'lt', ''));
+    });
+
+    $(document).on('click', '.remove-range-btn', function() {
+      $(this).closest('.grade-range').remove();
+    });
+
     $submitBtn.on('click', function() {
       const newConfig = collectConfig();
       
@@ -371,10 +618,36 @@ jQuery.noConflict();
           return;
       }
 
-      kintone.plugin.app.setConfig(newConfig, function() {
-        alert('プラグインの設定を保存しました。アプリを更新してください。');
-        window.location.href = '../../' + kintone.app.getId() + '/plugin/';
-      });
+      // デバッグ情報を出力
+      console.log('PLUGIN_ID:', PLUGIN_ID);
+      console.log('newConfig type:', typeof newConfig);
+      console.log('newConfig content:', newConfig);
+      
+      // 設定オブジェクトのJSONシリアライズテスト
+      try {
+        const testJson = JSON.stringify(newConfig);
+        console.log('JSON serialization test passed. Length:', testJson.length);
+      } catch (jsonError) {
+        console.error('JSON serialization failed:', jsonError);
+        alert('設定データにJSONとして保存できない値が含まれています: ' + jsonError.message);
+        return;
+      }
+      
+      // gradeSettingsのデバッグ
+      if (newConfig.gradeSettings) {
+        console.log('gradeSettings:', newConfig.gradeSettings);
+      }
+      
+      try {
+        kintone.plugin.app.setConfig(newConfig, function() {
+          alert('プラグインの設定を保存しました。アプリを更新してください。');
+          window.location.href = '../../' + kintone.app.getId() + '/plugin/';
+        });
+      } catch (error) {
+        console.error('kintone.plugin.app.setConfig error:', error);
+        console.error('Error stack:', error.stack);
+        alert('設定保存中にエラーが発生しました: ' + error.message);
+      }
     });
 
     $cancelBtn.on('click', function() {

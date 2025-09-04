@@ -29,6 +29,136 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
   let radarChart = null;
   let barChart = null;
   let compressionMode = false; // 圧縮モードの状態
+  let gradeMode = false; // ★成績表示モードの状態
+
+  // ★成績評価の基準値（デフォルト値、設定で上書き可能）
+  let GRADE_THRESHOLDS = {
+    assetEfficiency: [ // 資産効率: 高いほど良い
+      { score: 5, min: 120, max: Infinity },
+      { score: 4, min: 100, max: 120 },
+      { score: 3, min: 80, max: 100 },
+      { score: 2, min: 60, max: 80 },
+      { score: 1, min: -Infinity, max: 60 },
+    ],
+    roa: [ // ROA: 高いほど良い
+      { score: 5, min: 8, max: Infinity },
+      { score: 4, min: 6, max: 8 },
+      { score: 3, min: 4, max: 6 },
+      { score: 2, min: 2, max: 4 },
+      { score: 1, min: -Infinity, max: 2 },
+    ],
+    incomeTax: [ // 所得税率: 低いほど良い
+      { score: 5, min: -Infinity, max: 10 },
+      { score: 4, min: 10, max: 20 },
+      { score: 3, min: 20, max: 30 },
+      { score: 2, min: 30, max: 40 },
+      { score: 1, min: 40, max: Infinity },
+    ],
+    operatingCost: [ // 運営コスト率: 低いほど良い
+      { score: 5, min: -Infinity, max: 15 },
+      { score: 4, min: 15, max: 20 },
+      { score: 3, min: 20, max: 25 },
+      { score: 2, min: 25, max: 30 },
+      { score: 1, min: 30, max: Infinity },
+    ],
+    noi: [ // NOI率: 高いほど良い
+      { score: 5, min: 8, max: Infinity },
+      { score: 4, min: 6, max: 8 },
+      { score: 3, min: 4, max: 6 },
+      { score: 2, min: 2, max: 4 },
+      { score: 1, min: -Infinity, max: 2 },
+    ],
+  };
+
+  // ★設定から成績基準を更新する関数（動的段階・評価方向・境界含有に対応）
+  function updateGradeThresholdsFromConfig() {
+    try {
+      // 新構造: gradeSettings（推奨）
+      if (config && config.gradeSettings) {
+        const settings = typeof config.gradeSettings === 'string' ? JSON.parse(config.gradeSettings) : config.gradeSettings;
+        console.log('Updating grade thresholds from gradeSettings:', settings);
+        Object.keys(settings || {}).forEach(metric => {
+          const mset = settings[metric];
+          if (!mset || !Array.isArray(mset.levels)) return;
+          const orientation = (mset.orientation === 'lower' || mset.orientation === 'higher') ? mset.orientation : 'higher';
+          const includeLower = (typeof mset.includeLower === 'boolean') ? mset.includeLower : true;
+          const includeUpper = (typeof mset.includeUpper === 'boolean') ? mset.includeUpper : false;
+
+          // レベルの整形と無限端の補完
+          let levels = mset.levels.map(l => {
+            const min = parseFloat(l.min);
+            const max = parseFloat(l.max);
+            return {
+              min: isNaN(min) ? -Infinity : min,
+              max: isNaN(max) ? Infinity : max,
+            };
+          }).filter(l => l.min !== undefined && l.max !== undefined);
+
+          // min昇順に整列（重複や交差の検証はしない）
+          levels.sort((a, b) => (a.min === b.min ? a.max - b.max : a.min - b.min));
+
+          const num = levels.length;
+          const thresholds = levels.map((l, idx) => {
+            const parsedGrade = parseInt(l.grade, 10);
+            const gradeFromLevel = Number.isFinite(parsedGrade) && parsedGrade > 0 ? parsedGrade : null;
+            const score = gradeFromLevel != null
+              ? gradeFromLevel
+              : ((orientation === 'higher') ? (idx + 1) : (num - idx));
+            return {
+              score: score,
+              min: l.min,
+              max: l.max,
+              includeLower: includeLower,
+              includeUpper: includeUpper,
+            };
+          });
+
+          GRADE_THRESHOLDS[metric] = thresholds;
+        });
+        console.log('Grade thresholds updated from gradeSettings');
+      } else if (config && config.gradeThresholds) {
+        // 旧構造: 固定5段階（後方互換）
+        console.log('Updating grade thresholds from legacy gradeThresholds:', config.gradeThresholds);
+        const savedThresholds = typeof config.gradeThresholds === 'string' ? JSON.parse(config.gradeThresholds) : config.gradeThresholds;
+        Object.keys(savedThresholds || {}).forEach(metric => {
+          if (!savedThresholds[metric]) return;
+          const grades = ['grade5', 'grade4', 'grade3', 'grade2', 'grade1'];
+          const scores = [5, 4, 3, 2, 1];
+          const thresholds = grades.map((g, i) => {
+            let min = parseFloat(savedThresholds[metric][g]?.min);
+            let max = parseFloat(savedThresholds[metric][g]?.max);
+            if (isNaN(min)) min = -Infinity;
+            if (isNaN(max)) max = Infinity;
+            if (max >= 999) max = Infinity;
+            if (min <= -999) min = -Infinity;
+            return { score: scores[i], min, max, includeLower: true, includeUpper: false };
+          });
+          GRADE_THRESHOLDS[metric] = thresholds;
+        });
+        console.log('Grade thresholds updated from legacy');
+      } else {
+        console.log('No grade settings found in config, using defaults');
+      }
+    } catch (error) {
+      console.error('Error updating grade thresholds from config:', error);
+      console.log('Using default grade thresholds');
+    }
+  }
+
+  // ★成績段階の最大スコアを取得（Y軸上限に利用）
+  function getMaxGradeScore() {
+    try {
+      const scores = Object.keys(GRADE_THRESHOLDS).map(k => {
+        const arr = Array.isArray(GRADE_THRESHOLDS[k]) ? GRADE_THRESHOLDS[k] : [];
+        const localMax = arr.reduce((m, t) => Math.max(m, Number.isFinite(t.score) ? t.score : 0), 0);
+        return localMax;
+      });
+      const max = Math.max(5, ...scores); // 既定で5
+      return isFinite(max) && max > 0 ? max : 5;
+    } catch (_) {
+      return 5;
+    }
+  }
 
   // 汎用設定
   const METRICS = ['assetEfficiency','roa','incomeTax','operatingCost','noi'];
@@ -190,6 +320,9 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
     try {
         // ローディングインジケータを表示
         showLoadingIndicator(spaceRoot);
+
+        // ★設定から成績基準を更新
+        updateGradeThresholdsFromConfig();
 
         // アプリIDを設定画面から取得
         const propertyAppId = config.propertyAppId;
@@ -694,6 +827,10 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
                     <input type="checkbox" id="compressionCheckbox" class="compression-checkbox">
                     <label for="compressionCheckbox">平均を1として比較する</label>
                 </div>
+                <div class="grade-control">
+                    <input type="checkbox" id="gradeCheckbox" class="grade-checkbox">
+                    <label for="gradeCheckbox">成績で表示する</label>
+                </div>
             </div>
             <div class="chart-item">
                 <div id="radarChartContainer">
@@ -728,53 +865,109 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
 
   // チャートの初期化
   function initializeCharts(appData) {
-    const radarCtx = document.getElementById('radarChart').getContext('2d');
-    const barCtx = document.getElementById('barChart').getContext('2d');
+    try {
+      console.log('Initializing charts with data:', appData);
+      
+      const radarCanvas = document.getElementById('radarChart');
+      const barCanvas = document.getElementById('barChart');
+      
+      if (!radarCanvas || !barCanvas) {
+        console.error('Chart canvas elements not found');
+        return;
+      }
+      
+      const radarCtx = radarCanvas.getContext('2d');
+      const barCtx = barCanvas.getContext('2d');
 
-    const radarDatasets = FIELDS.map((f, i) => ({
-        label: DATASET_STYLE[i].label,
-        data: getChartValues(f, appData),
-        borderColor: DATASET_STYLE[i].border,
-        backgroundColor: DATASET_STYLE[i].bgRadar,
-        borderWidth: DATASET_STYLE[i].bwRadar
-    }));
+      // データセットを安全に作成
+      const radarDatasets = FIELDS.map((f, i) => {
+        const data = getChartValues(f, appData);
+        console.log(`Radar dataset ${i} (${f}) data:`, data);
+        return {
+          label: String(DATASET_STYLE[i].label), // 文字列であることを保証
+          data: data.map(val => Number(val) || 0), // 数値であることを保証
+          borderColor: String(DATASET_STYLE[i].border),
+          backgroundColor: String(DATASET_STYLE[i].bgRadar),
+          borderWidth: Number(DATASET_STYLE[i].bwRadar)
+        };
+      });
 
-    const barDatasets = FIELDS.map((f, i) => ({
-        label: DATASET_STYLE[i].label,
-        data: getChartValues(f, appData),
-        backgroundColor: DATASET_STYLE[i].bgBar,
-        borderColor: DATASET_STYLE[i].border,
-        borderWidth: DATASET_STYLE[i].bwBar
-    }));
+      const barDatasets = FIELDS.map((f, i) => {
+        const data = getChartValues(f, appData);
+        console.log(`Bar dataset ${i} (${f}) data:`, data);
+        return {
+          label: String(DATASET_STYLE[i].label), // 文字列であることを保証
+          data: data.map(val => Number(val) || 0), // 数値であることを保証
+          backgroundColor: String(DATASET_STYLE[i].bgBar),
+          borderColor: String(DATASET_STYLE[i].border),
+          borderWidth: Number(DATASET_STYLE[i].bwBar)
+        };
+      });
 
-    radarChart = new Chart(radarCtx, {
-        type: 'radar',
-        data: { labels: CHART_LABELS, datasets: radarDatasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            resizeDelay: 100,
-            scales: { r: { beginAtZero: true, max: 100, min: 0 } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
+      console.log('Chart labels:', CHART_LABELS);
+      
+      radarChart = new Chart(radarCtx, {
+          type: 'radar',
+          data: { 
+            labels: CHART_LABELS.map(label => String(label)), // 文字列であることを保証
+            datasets: radarDatasets 
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              resizeDelay: 100,
+              scales: { 
+                r: { 
+                  beginAtZero: true, 
+                  max: 100, 
+                  min: 0,
+                  type: 'radialLinear'
+                } 
+              },
+              plugins: { 
+                legend: { 
+                  position: 'bottom' 
+                } 
+              }
+          }
+      });
 
-    barChart = new Chart(barCtx, {
-        type: 'bar',
-        data: { labels: CHART_LABELS, datasets: barDatasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            resizeDelay: 100,
-            scales: { y: { beginAtZero: true, max: 100, min: 0 } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
-    
-    // 初期化後にY軸設定を適用
-    updateChartScales();
+      barChart = new Chart(barCtx, {
+          type: 'bar',
+          data: { 
+            labels: CHART_LABELS.map(label => String(label)), // 文字列であることを保証
+            datasets: barDatasets 
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              resizeDelay: 100,
+              scales: { 
+                y: { 
+                  beginAtZero: true, 
+                  max: 100, 
+                  min: 0,
+                  type: 'linear'
+                } 
+              },
+              plugins: { 
+                legend: { 
+                  position: 'bottom' 
+                } 
+              }
+          }
+      });
+      
+      console.log('Charts initialized successfully');
+      
+      // 初期化後にY軸設定を適用
+      updateChartScales();
+    } catch (error) {
+      console.error('Error initializing charts:', error);
+      console.error('Error stack:', error.stack);
+    }
   }
 
   // イベントリスナーの設定（入力値→データ反映）
@@ -809,6 +1002,12 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
         checkbox.addEventListener('change', () => {
             toggleCompressionMode();
         });
+    });
+
+    document.querySelectorAll('.grade-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+          toggleGradeMode();
+      });
     });
   }
 
@@ -883,38 +1082,91 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
 
   // チャート更新関数
   function getChartValues(field, appData = data) {
-    if (compressionMode) {
-      // 圧縮モード: 平均を基準として比率を表示（数値で）
-      return METRICS.map(k => {
-        const average = appData[k].average;
-        const current = appData[k].current;
-        const forecast = appData[k].forecast;
-        
-        if (field === 'current') {
-          return average > 0 ? current / average : 0; // 現状 / 平均
-        } else if (field === 'forecast') {
-          return average > 0 ? forecast / average : 0; // 試算 / 平均
-        } else {
-          return 1; // 平均は基準なので1
-        }
-      });
-    } else {
-      // 通常モード: そのままの値を表示
-      return METRICS.map(k => appData[k][field]);
+    try {
+      if (gradeMode) {
+        // ★成績モード: 数値を成績(1-5)に変換
+        const grades = METRICS.map(k => {
+          if (!appData[k]) {
+            console.warn(`Missing data for metric: ${k}`);
+            return 1;
+          }
+          const value = appData[k][field];
+          if (value === null || value === undefined) {
+            console.warn(`Missing value for ${k}.${field}:`, value);
+            return 1;
+          }
+          return calculateGrade(k, value);
+        });
+        console.log('Grade mode values:', grades);
+        return grades;
+      } else if (compressionMode) {
+        // 圧縮モード: 平均を1として比率を表示（数値で）
+        return METRICS.map(k => {
+          if (!appData[k]) {
+            console.warn(`Missing data for metric: ${k}`);
+            return 0;
+          }
+          const average = parseFloat(appData[k].average) || 0;
+          const current = parseFloat(appData[k].current) || 0;
+          const forecast = parseFloat(appData[k].forecast) || 0;
+          
+          if (field === 'current') {
+            return average > 0 ? current / average : 0; // 現状 / 平均
+          } else if (field === 'forecast') {
+            return average > 0 ? forecast / average : 0; // 試算 / 平均
+          } else {
+            return 1; // 平均は基準なので1
+          }
+        });
+      } else {
+        // 通常モード: そのままの値を表示
+        return METRICS.map(k => {
+          if (!appData[k] || appData[k][field] === null || appData[k][field] === undefined) {
+            console.warn(`Missing value for ${k}.${field}`);
+            return 0;
+          }
+          return parseFloat(appData[k][field]) || 0;
+        });
+      }
+    } catch (error) {
+      console.error('Error in getChartValues:', error);
+      console.log('appData:', appData, 'field:', field, 'gradeMode:', gradeMode, 'compressionMode:', compressionMode);
+      // エラー時はデフォルト値を返す
+      return METRICS.map(() => gradeMode ? 1 : 0);
     }
   }
 
   function updateCharts() {
-    // Y軸設定を更新
-    updateChartScales();
-    
-    FIELDS.forEach((f, i) => {
+    try {
+      // Y軸設定を更新
+      updateChartScales();
+      
+      FIELDS.forEach((f, i) => {
         const vals = getChartValues(f);
-        radarChart.data.datasets[i].data = vals;
-        barChart.data.datasets[i].data = vals;
-    });
-    radarChart.update();
-    barChart.update();
+        if (vals && Array.isArray(vals) && vals.length === METRICS.length) {
+          // データを数値に変換して安全性を確保
+          const safeVals = vals.map(val => Number(val) || 0);
+          
+          if (radarChart && radarChart.data && radarChart.data.datasets && radarChart.data.datasets[i]) {
+            radarChart.data.datasets[i].data = safeVals;
+          }
+          if (barChart && barChart.data && barChart.data.datasets && barChart.data.datasets[i]) {
+            barChart.data.datasets[i].data = safeVals;
+          }
+        } else {
+          console.warn(`Invalid chart values for field ${f}:`, vals);
+        }
+      });
+      
+      if (radarChart && radarChart.update) {
+        radarChart.update();
+      }
+      if (barChart && barChart.update) {
+        barChart.update();
+      }
+    } catch (error) {
+      console.error('Error updating charts:', error);
+    }
   }
 
   // タブ切り替え（キー指定）
@@ -955,6 +1207,15 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
       compressionMode = checkbox.checked;
     }
     
+    // 排他制御: 圧縮モードがONになったら成績モードをOFFにする
+    if (compressionMode) {
+      const gradeCb = document.querySelector('.grade-checkbox');
+      if (gradeCb) {
+        gradeCb.checked = false;
+      }
+      gradeMode = false;
+    }
+    
     // チャートのY軸設定を更新
     updateChartScales();
     
@@ -962,9 +1223,67 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
     updateCharts();
   }
 
+  // ★数値を成績に変換する関数
+  function calculateGrade(metric, value) {
+    const thresholds = GRADE_THRESHOLDS[metric];
+    if (!thresholds) return 1; // デフォルトは1
+    
+    // 値の検証
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return 1;
+    
+    for (const threshold of thresholds) {
+      const incL = (typeof threshold.includeLower === 'boolean') ? threshold.includeLower : true;
+      const incU = (typeof threshold.includeUpper === 'boolean') ? threshold.includeUpper : false;
+      const lowerOk = incL ? (numValue >= threshold.min) : (numValue > threshold.min);
+      const upperOk = incU ? (numValue <= threshold.max) : (numValue < threshold.max);
+      if (lowerOk && upperOk) return threshold.score;
+    }
+    return 1; // どの範囲にも該当しない場合は1
+  }
+
+  // ★成績表示モード切り替え
+  function toggleGradeMode() {
+    const checkbox = document.querySelector('.grade-checkbox');
+    if (checkbox) {
+      gradeMode = checkbox.checked;
+    }
+    
+    // 排他制御: 成績モードがONになったら圧縮モードをOFFにする
+    if (gradeMode) {
+      const compCb = document.querySelector('.compression-checkbox');
+      if (compCb) {
+        compCb.checked = false;
+      }
+      compressionMode = false;
+    }
+    updateChartScales();
+    updateCharts();
+  }
+
   // チャートのY軸設定を更新
   function updateChartScales() {
-    if (compressionMode) {
+    try {
+      if (gradeMode) {
+        // ★成績モード: 軸の最小値を常に0に固定、上限は最大成績に合わせる
+        const maxGrade = getMaxGradeScore();
+        if (radarChart && radarChart.options && radarChart.options.scales && radarChart.options.scales.r) {
+          radarChart.options.scales.r.max = maxGrade;
+          radarChart.options.scales.r.min = 0;
+          radarChart.options.scales.r.beginAtZero = true;
+          if (!radarChart.options.scales.r.ticks) radarChart.options.scales.r.ticks = {};
+          radarChart.options.scales.r.ticks.suggestedMin = 0;
+          radarChart.options.scales.r.ticks.stepSize = 1;
+        }
+        if (barChart && barChart.options && barChart.options.scales && barChart.options.scales.y) {
+          barChart.options.scales.y.max = maxGrade;
+          barChart.options.scales.y.min = 0;
+          barChart.options.scales.y.beginAtZero = true;
+          if (!barChart.options.scales.y.ticks) barChart.options.scales.y.ticks = {};
+          barChart.options.scales.y.ticks.suggestedMin = 0;
+          barChart.options.scales.y.ticks.stepSize = 1;
+        }
+      } else if (compressionMode) {
       // 圧縮モード: 平均を1として中央に配置
       const maxValue = Math.max(...METRICS.map(k => {
         const current = data[k].current;
@@ -987,48 +1306,55 @@ import { createBorrowingTab } from './tabs/borrowingTab.js';
       // 1を中央に配置するため、上下対称に設定
       const range = Math.max(maxValue - 1, 1 - minValue);
       const padding = Math.max(range * 0.2, 0.2); // 20%の余裕
-      const chartMax = 1 + range + padding;
-      const chartMin = Math.max(1 - range - padding, 0);
-      
-      if (radarChart) {
-        radarChart.options.scales.r.max = chartMax;
-        radarChart.options.scales.r.min = chartMin;
-      }
-      if (barChart) {
-        barChart.options.scales.y.max = chartMax;
-        barChart.options.scales.y.min = chartMin;
-      }
-    } else {
-      // 通常モード: レーダーチャートは固定上限100、棒グラフは自動調整
-      if (radarChart) {
-        radarChart.options.scales.r.max = 100;
-        radarChart.options.scales.r.min = 0;
-      }
-      
-      if (barChart) {
-        // 棒グラフのみデータに応じて自動調整
-        const maxValue = Math.max(...METRICS.map(k => {
-          const current = data[k].current;
-          const forecast = data[k].forecast;
-          const average = data[k].average;
-          return Math.max(current, forecast, average);
-        }));
+        const chartMax = 1 + range + padding;
+        const chartMin = Math.max(1 - range - padding, 0);
         
-        const minValue = Math.min(...METRICS.map(k => {
-          const current = data[k].current;
-          const forecast = data[k].forecast;
-          const average = data[k].average;
-          return Math.min(current, forecast, average);
-        }));
+        if (radarChart && radarChart.options && radarChart.options.scales && radarChart.options.scales.r) {
+          radarChart.options.scales.r.max = chartMax;
+          radarChart.options.scales.r.min = chartMin;
+          radarChart.options.scales.r.beginAtZero = false;
+        }
+        if (barChart && barChart.options && barChart.options.scales && barChart.options.scales.y) {
+          barChart.options.scales.y.max = chartMax;
+          barChart.options.scales.y.min = chartMin;
+          barChart.options.scales.y.beginAtZero = false;
+        }
+      } else {
+        // 通常モード: レーダーチャートは固定上限100、棒グラフは自動調整
+        if (radarChart && radarChart.options && radarChart.options.scales && radarChart.options.scales.r) {
+          radarChart.options.scales.r.max = 100;
+          radarChart.options.scales.r.min = 0;
+          radarChart.options.scales.r.beginAtZero = true;
+        }
         
-        // 上下に余裕を持たせる
-        const padding = Math.max((maxValue - minValue) * 0.1, 5);
-        const chartMax = maxValue + padding;
-        const chartMin = Math.max(minValue - padding, 0);
-        
-        barChart.options.scales.y.max = chartMax;
-        barChart.options.scales.y.min = chartMin;
+        if (barChart && barChart.options && barChart.options.scales && barChart.options.scales.y) {
+          // 棒グラフのみデータに応じて自動調整
+          const maxValue = Math.max(...METRICS.map(k => {
+            const current = parseFloat(data[k].current) || 0;
+            const forecast = parseFloat(data[k].forecast) || 0;
+            const average = parseFloat(data[k].average) || 0;
+            return Math.max(current, forecast, average);
+          }));
+          
+          const minValue = Math.min(...METRICS.map(k => {
+            const current = parseFloat(data[k].current) || 0;
+            const forecast = parseFloat(data[k].forecast) || 0;
+            const average = parseFloat(data[k].average) || 0;
+            return Math.min(current, forecast, average);
+          }));
+          
+          // 上下に余裕を持たせる
+          const padding = Math.max((maxValue - minValue) * 0.1, 5);
+          const chartMax = maxValue + padding;
+          const chartMin = Math.max(minValue - padding, 0);
+          
+          barChart.options.scales.y.max = chartMax;
+          barChart.options.scales.y.min = chartMin;
+          barChart.options.scales.y.beginAtZero = chartMin === 0;
+        }
       }
+    } catch (error) {
+      console.error('Error updating chart scales:', error);
     }
   }
 })();
