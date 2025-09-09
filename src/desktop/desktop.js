@@ -31,6 +31,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   let barChart = null;
   let compressionMode = false; // 圧縮モードの状態
   let gradeMode = true; // ★成績表示モードの状態（デフォルトON）
+  let averagesPending = false; // 平均集計がバックグラウンド中か
 
   // ★設定から成績基準を更新する（モジュール版）
   function updateGradeThresholdsFromConfig() {
@@ -112,8 +113,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     `;
   }
 
-  // シーク法で全レコードを取得する関数
-  async function fetchAllRecordsWithSeek(appId, query = '', batchSize = 500) {
+  // シーク法で全レコードを取得する関数（$idシーク + order by + limit）
+  async function fetchAllRecordsWithSeek(appId, baseQuery = '', batchSize = 500) {
     const allRecords = [];
     let lastRecordId = null;
     let hasMore = true;
@@ -123,19 +124,23 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
 
     console.log(`BI Dashboard Plugin: アプリ${appId}の全レコード取得を開始 (シーク法, バッチサイズ: ${batchSize})`);
 
+    function buildQuery(q, lastId, size) {
+      const parts = [];
+      const trimmed = String(q || '').trim();
+      if (trimmed) parts.push(`(${trimmed})`);
+      if (lastId) parts.push(`$id > ${lastId}`);
+      parts.push(`order by $id asc limit ${size}`);
+      return parts.join(' ');
+    }
+
     while (hasMore) {
       try {
         const params = {
           app: appId,
-          query: query,
+          query: buildQuery(baseQuery, lastRecordId, batchSize),
           fields: [], // 全フィールドを取得
           totalCount: true
         };
-
-        // シーク法: 前回の最後のレコードIDより大きいIDのレコードを取得
-        if (lastRecordId) {
-          params.query = query ? `${query} and $id > ${lastRecordId}` : `$id > ${lastRecordId}`;
-        }
 
         const response = await kintone.api('/k/v1/records.json', 'GET', params);
         
@@ -179,20 +184,57 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     return { records: allRecords };
   }
 
-  // 並列で複数アプリの全レコードを取得
-  async function fetchAllRecordsParallel(appIds, queries = {}, batchSize = 500) {
-    const promises = appIds.map(appId => 
-      fetchAllRecordsWithSeek(appId, queries[appId] || '', batchSize)
-    );
-    
-    const results = await Promise.all(promises);
-    
-    // 結果をアプリIDをキーとしたオブジェクトに変換
-    const resultMap = {};
-    appIds.forEach((appId, index) => {
-      resultMap[appId] = results[index];
+  // オフセット方式の並列全件取得
+  async function fetchAllRecordsWithOffsetParallel(appId, baseQuery = '', pageSize = 500, concurrency = 5) {
+    function buildOffsetQuery(q, size, offset) {
+      const parts = [];
+      const trimmed = String(q || '').trim();
+      if (trimmed) parts.push(`(${trimmed})`);
+      parts.push(`order by $id asc limit ${size} offset ${offset}`);
+      return parts.join(' ');
+    }
+
+    // 総件数取得（取得に失敗した場合はシーク法へフォールバック）
+    let totalCount = 0;
+    try {
+      const headParams = { app: appId, query: buildOffsetQuery(baseQuery, 1, 0), totalCount: true, fields: [] };
+      const headResp = await kintone.api('/k/v1/records.json', 'GET', headParams);
+      totalCount = Number(headResp.totalCount || 0);
+    } catch (_) {}
+    if (!totalCount || !isFinite(totalCount) || totalCount < 0) {
+      return fetchAllRecordsWithSeek(appId, baseQuery, pageSize);
+    }
+
+    const offsets = [];
+    for (let off = 0; off < totalCount; off += pageSize) offsets.push(off);
+
+    const allRecords = [];
+    for (let i = 0; i < offsets.length; i += concurrency) {
+      const chunk = offsets.slice(i, i + concurrency);
+      const reqs = chunk.map(off => {
+        const params = { app: appId, query: buildOffsetQuery(baseQuery, pageSize, off), totalCount: false, fields: [] };
+        return kintone.api('/k/v1/records.json', 'GET', params).then(r => r.records || []);
+      });
+      const results = await Promise.all(reqs);
+      results.forEach(arr => { allRecords.push(...arr); });
+      // 軽いウェイトでレート制限緩和
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return { records: allRecords };
+  }
+
+  // 並列で複数アプリの全レコードを取得（デフォルト: オフセット並列）
+  async function fetchAllRecordsParallel(appIds, queries = {}, batchSize = 500, mode = 'offset', concurrency = 5) {
+    const useOffset = String(mode || 'offset').toLowerCase() === 'offset';
+    const promises = appIds.map(appId => {
+      const q = queries[appId] || '';
+      return useOffset
+        ? fetchAllRecordsWithOffsetParallel(appId, q, batchSize, concurrency)
+        : fetchAllRecordsWithSeek(appId, q, batchSize);
     });
-    
+    const results = await Promise.all(promises);
+    const resultMap = {};
+    appIds.forEach((appId, index) => { resultMap[appId] = results[index]; });
     return resultMap;
   }
 
@@ -248,13 +290,13 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           }
         }
 
-        // 全オーナーのデータを取得する関数（シーク法使用）
+        // 全オーナーのデータを取得する関数（デフォルト: オフセット並列）
         async function fetchAllOwnersData() {
           try {
             console.log('BI Dashboard Plugin: 全オーナーデータの並列取得を開始');
             
             // 並列で全レコードを取得（queriesは空にして全レコードを取得）
-            const allData = await fetchAllRecordsParallel([ownerAppId, propertyAppId], {}, 500);
+            const allData = await fetchAllRecordsParallel([ownerAppId, propertyAppId], {}, 500, 'offset', 5);
             
             return {
               owners: allData[ownerAppId]?.records || [],
@@ -266,11 +308,11 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           }
         }
 
-        // Kintone APIからデータを並行して取得（フォールバック付き）
-        const [propertyResponse, ownerResponse, allOwnersData] = await Promise.all([
+        // まずは現オーナー分のみ取得して先に表示（平均は非同期）
+        averagesPending = true;
+        const [propertyResponse, ownerResponse] = await Promise.all([
             fetchWithQueryFallback(propertyAppId, config.propertyOwnerId, currentOwnerId),
-            fetchWithQueryFallback(ownerAppId, config.ownerId, currentOwnerId),
-            fetchAllOwnersData()
+            fetchWithQueryFallback(ownerAppId, config.ownerId, currentOwnerId)
         ]);
 
         // デバッグログ
@@ -286,12 +328,29 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           });
         } catch (_) {}
 
-        // 取得したデータを加工
-        const processedData = processKintoneData(propertyResponse.records, ownerResponse.records, allOwnersData);
+        // 取得したデータを平均ダミーで加工（allOwnersDataは空で先に表示）
+        const processedData = processKintoneData(propertyResponse.records, ownerResponse.records, { owners: [], properties: [] });
         data = processedData; // グローバル変数に格納
 
-        // UIを構築してアプリをマウント
+        // UIを構築してアプリをマウント（平均列は「集計中」、グラフは平均非表示）
         mountApp(spaceRoot, processedData);
+
+        // バックグラウンドで全オーナー平均を取得し再描画
+        fetchAllOwnersData().then((allOwnersData) => {
+          try {
+            const updated = processKintoneData(propertyResponse.records, ownerResponse.records, allOwnersData);
+            data = updated;
+            averagesPending = false;
+            updateTable();
+            updateCharts();
+          } catch (e) {
+            console.error('平均再計算に失敗:', e);
+            averagesPending = false;
+          }
+        }).catch(e => {
+          console.error('全オーナー平均の取得に失敗:', e);
+          averagesPending = false;
+        });
 
     } catch (error) {
         console.error('Failed to fetch or process kintone data:', error);
@@ -358,7 +417,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
 
     // ROAと運営コストの計算
     let totalMarketPrice = 0;
-    let totalIncome = 0;
+    let totalIncome = 0; // 収支（ROA用）
+    let totalNetIncome = 0; // 実質収入（NOI用）
     let totalInheritanceValue = 0;
     let totalOperatingCost = 0;
     let totalFullRent = 0;
@@ -379,6 +439,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         totalOperatingCost += propertyOperatingCost;
         const propertyFullRent = parseFloat(p.full_rent?.value || 0);
         totalFullRent += propertyFullRent;
+        const propertyNetIncome = parseFloat(p.net_income?.value || 0);
+        totalNetIncome += propertyNetIncome;
 
         // 物件ごとの指標を計算（平均値用）
         const incomeVal = parseFloat(p.income?.value || 0);
@@ -420,8 +482,9 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         
         if (ownerProperties.length === 0) return;
         
-        // このオーナーのROAと運営コスト率を計算
-        let ownerTotalIncome = 0;
+        // このオーナーのROAと運営コスト率/NOI率を計算
+        let ownerTotalIncome = 0; // 収支（ROA用）
+        let ownerTotalNetIncome = 0; // 実質収入（NOI用）
         let ownerTotalInheritanceValue = 0;
         let ownerTotalOperatingCost = 0;
         let ownerTotalFullRent = 0;
@@ -430,6 +493,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           const propIncome = parseFloat(prop[config.propIncome]?.value || 0);
           const propInheritanceValue = parseFloat(prop[config.propInheritanceTaxVal]?.value || 0);
           const propFullRent = parseFloat(prop[config.propFullRent]?.value || 0);
+          const propNetIncome = parseFloat(prop[config.propNetIncome]?.value || 0);
           
           const propOperatingCost = parseFloat(prop[config.propPropTax]?.value || 0) +
                                    parseFloat(prop[config.propMgmtFee]?.value || 0) +
@@ -438,6 +502,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
                                    parseFloat(prop[config.propMaint]?.value || 0);
           
           ownerTotalIncome += propIncome;
+          ownerTotalNetIncome += propNetIncome;
           ownerTotalInheritanceValue += propInheritanceValue;
           ownerTotalOperatingCost += propOperatingCost;
           ownerTotalFullRent += propFullRent;
@@ -455,8 +520,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         });
         const ownerAssetEfficiency = ownerTotalInheritanceValue > 0 ? (ownerTotalMarketPrice / ownerTotalInheritanceValue) * 100 : 0;
         
-        // NOI率の計算
-        const ownerNoi = ownerTotalIncome - ownerTotalOperatingCost;
+        // NOI率の計算（NOI = 実質収入 - 運営コスト合計）
+        const ownerNoi = ownerTotalNetIncome - ownerTotalOperatingCost;
         const ownerNoiRate = ownerTotalFullRent > 0 ? (ownerNoi / ownerTotalFullRent) * 100 : 0;
         
         // 所得税率を計算
@@ -544,8 +609,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     // 資産効率(現状) = 実勢価格合計 ÷ 相続税評価額合計 × 100
     const assetEfficiencyCurrent = totalInheritanceValue > 0 ? (totalMarketPrice / totalInheritanceValue) * 100 : 0;
     
-    // NOI率の計算: (NOI / 満室賃料) * 100
-    const totalNoi = totalIncome - totalOperatingCost;
+    // NOI率の計算: (NOI / 満室賃料) * 100, NOI = 実質収入 - 運営コスト合計
+    const totalNoi = totalNetIncome - totalOperatingCost;
     const noiRateCurrent = totalFullRent > 0 ? (totalNoi / totalFullRent) * 100 : 0;
     
     // 所得税・相続税・借り入れ状況の計算
@@ -670,10 +735,11 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     const rows = CHART_LABELS.map((label, i) => {
         const metricKey = METRICS[i];
         const v = appData[metricKey];
+        const avgText = averagesPending ? '集計中' : v.average.toFixed(1);
         return `<tr>
             <td>${label}</td>
             <td>${v.current.toFixed(1)}</td>
-            <td>${v.average.toFixed(1)}</td>
+            <td>${avgText}</td>
             <td>${v.forecast.toFixed(1)}</td>
         </tr>`;
     }).join('');
@@ -771,7 +837,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           data: data.map(val => Number(val) || 0), // 数値であることを保証
           borderColor: String(DATASET_STYLE[i].border),
           backgroundColor: String(DATASET_STYLE[i].bgRadar),
-          borderWidth: Number(DATASET_STYLE[i].bwRadar)
+          borderWidth: Number(DATASET_STYLE[i].bwRadar),
+          hidden: (f === 'average' && averagesPending) ? true : false
         };
       });
 
@@ -783,7 +850,8 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           data: data.map(val => Number(val) || 0), // 数値であることを保証
           backgroundColor: String(DATASET_STYLE[i].bgBar),
           borderColor: String(DATASET_STYLE[i].border),
-          borderWidth: Number(DATASET_STYLE[i].bwBar)
+          borderWidth: Number(DATASET_STYLE[i].bwBar),
+          hidden: (f === 'average' && averagesPending) ? true : false
         };
       });
 
@@ -966,7 +1034,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         const cells = row.querySelectorAll('td');
         if (cells.length < 4) return;
         cells[1].textContent = v.current.toFixed(1);
-        cells[2].textContent = v.average.toFixed(1);
+        cells[2].textContent = averagesPending ? '集計中' : v.average.toFixed(1);
         cells[3].textContent = v.forecast.toFixed(1);
     });
   }

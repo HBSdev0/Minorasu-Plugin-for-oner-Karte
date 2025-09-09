@@ -3,16 +3,16 @@
     "version": "1.0.0",
     "type": "APP",
     "name": {
-        "ja": "BIダッシュボードプラグイン",
-        "en": "BI Dashboard Plugin"
+        "ja": "オーナーカルテ用試算ダッシュボード表示プラグイン",
+        "en": "Owner Caret Dashboard Display Plugin"
     },
     "description": {
-        "ja": "財務指標を可視化するダッシュボードです。",
-        "en": "A dashboard to visualize financial metrics."
+        "ja": "オーナーカルテ用試算ダッシュボードを表示するプラグインです。",
+        "en": "A plugin to display the Owner Caret Dashboard Calculation."
     },
     "homepage_url": {
-        "ja": "https://example.com",
-        "en": "https://example.com"
+        "ja": "https://hot-bs.co.jp",
+        "en": "https://hot-bs.co.jp"
     },
     "icon": "image/icon.png",
     "desktop": {
