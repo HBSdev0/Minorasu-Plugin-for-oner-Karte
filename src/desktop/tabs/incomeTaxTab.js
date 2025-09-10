@@ -138,9 +138,15 @@ export function createIncomeTaxTab(appData) {
         </div>
     `;
 
-    // 数値をカンマ区切りでフォーマットする関数
+    // 数値をカンマ区切りでフォーマットする関数（小数点以下は区切らない）
     function formatNumber(value) {
-        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const str = (value === null || value === undefined) ? '' : String(value);
+        if (str === '') return '';
+        const [intPartRaw, decimalPart] = str.split('.');
+        const sign = intPartRaw.startsWith('-') ? '-' : '';
+        const intPart = intPartRaw.replace('-', '');
+        const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return sign + withCommas + (decimalPart !== undefined ? '.' + decimalPart : '');
     }
 
     // カンマ区切りの数値を数値に変換する関数

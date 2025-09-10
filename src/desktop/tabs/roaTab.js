@@ -107,8 +107,13 @@ export function createRoaTab(appData) {
 
     // ユーティリティ
     function formatNumber(value) {
-        const n = (value === null || value === undefined) ? '' : String(value);
-        return n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const str = (value === null || value === undefined) ? '' : String(value);
+        if (str === '') return '';
+        const [intPartRaw, decimalPart] = str.split('.');
+        const sign = intPartRaw.startsWith('-') ? '-' : '';
+        const intPart = intPartRaw.replace('-', '');
+        const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return sign + withCommas + (decimalPart !== undefined ? '.' + decimalPart : '');
     }
 
     function parseFormattedNumber(value) {
