@@ -150,6 +150,47 @@
                 </div>
             </div>
 
+            <div class="settings-section">
+                <h2>平均値の取得方法</h2>
+                <div class="average-mode-group">
+                    <label><input type="radio" name="averageMode" value="compute" checked> 全レコードから平均を算出（現行）</label>
+                    <br>
+                    <label><input type="radio" name="averageMode" value="savedField"> 自アプリの平均値フィールドを使用</label>
+                </div>
+                <div id="averageFieldMappings" class="average-field-mappings" style="margin-top: 8px; display: none;">
+                    <div class="field-mapping">
+                        <label for="avgAssetEfficiencyField">資産効率平均</label>
+                        <select id="avgAssetEfficiencyField" class="kintone-current-app-field-select average-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                    </div>
+                    <div class="field-mapping">
+                        <label for="avgRoaField">ROA平均</label>
+                        <select id="avgRoaField" class="kintone-current-app-field-select average-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                    </div>
+                    <div class="field-mapping">
+                        <label for="avgIncomeTaxField">所得税率平均</label>
+                        <select id="avgIncomeTaxField" class="kintone-current-app-field-select average-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                    </div>
+                    <div class="field-mapping">
+                        <label for="avgOperatingCostField">運営コスト率平均</label>
+                        <select id="avgOperatingCostField" class="kintone-current-app-field-select average-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                    </div>
+                    <div class="field-mapping">
+                        <label for="avgNoiField">NOI率平均</label>
+                        <select id="avgNoiField" class="kintone-current-app-field-select average-field-select">
+                            <option value="">フィールドを選択してください</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="action-buttons">
                 <button type="button" id="plugin_cancel" class="btn btn-secondary">キャンセル</button>
                 <button type="button" id="plugin_submit" class="btn btn-primary">設定を保存</button>

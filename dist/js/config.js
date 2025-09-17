@@ -96,6 +96,13 @@ jQuery.noConflict();
   const $propertyFieldMappings = $('#propertyFieldMappings');
   const $submitBtn = $('#plugin_submit');
   const $cancelBtn = $('#plugin_cancel');
+  const AVERAGE_FIELD_KEYS = [
+    { key: 'avgAssetEfficiencyField', label: '資産効率平均' },
+    { key: 'avgRoaField', label: 'ROA平均' },
+    { key: 'avgIncomeTaxField', label: '所得税率平均' },
+    { key: 'avgOperatingCostField', label: '運営コスト率平均' },
+    { key: 'avgNoiField', label: 'NOI率平均' }
+  ];
   
   const OWNER_FIELD_MAP = {
     ownerId: 'オーナーID',
@@ -317,6 +324,17 @@ jQuery.noConflict();
             text: `${field.label} (${field.code})`
           }));
         });
+
+        // 平均モード用: 自アプリ平均フィールドの復元
+        try {
+          if (config) {
+            AVERAGE_FIELD_KEYS.forEach(({ key }) => {
+              if (config[key]) {
+                $(`#${key}`).val(config[key]);
+              }
+            });
+          }
+        } catch (_) {}
       })
       .catch(function(err) {
         console.error('Failed to get current app fields:', err);
@@ -486,6 +504,12 @@ jQuery.noConflict();
       $ownerAppId.val(config.ownerAppId || '');
       $propertyAppId.val(config.propertyAppId || '');
 
+      // 平均モード: UI反映
+      const mode = (config.averageMode || 'compute');
+      $(`input[name="averageMode"][value="${mode}"]`).prop('checked', true);
+      const showSaved = mode === 'savedField';
+      $('#averageFieldMappings').css('display', showSaved ? '' : 'none');
+
       if (config.ownerAppId) {
         // オーナーID設定
         populateOwnerIdMapping(config.ownerAppId, $ownerIdMappings, 'ownerId', 'オーナーID');
@@ -556,6 +580,7 @@ jQuery.noConflict();
       currentAppOwnerId: $currentAppOwnerId.val() || '',
       ownerAppId: $ownerAppId.val() || '',
       propertyAppId: $propertyAppId.val() || '',
+      averageMode: ($('input[name="averageMode"]:checked').val() || 'compute')
     };
 
     $('.kintone-field-select').each(function() {
@@ -565,6 +590,15 @@ jQuery.noConflict();
         newConfig[key] = $this.val() || '';
       }
     });
+
+    // 平均モードがsavedFieldの場合は平均フィールドも保存
+    if (newConfig.averageMode === 'savedField') {
+      AVERAGE_FIELD_KEYS.forEach(({ key }) => {
+        newConfig[key] = $(`#${key}`).val() || '';
+      });
+    } else {
+      AVERAGE_FIELD_KEYS.forEach(({ key }) => { newConfig[key] = ''; });
+    }
 
     // ★成績基準設定（動的UI）を収集（保存時は文字列化）
     newConfig.gradeSettings = JSON.stringify(collectGradeSettings());
@@ -635,6 +669,12 @@ jQuery.noConflict();
 
   // 保存・キャンセルのイベントハンドラ
   function setupEventHandlers() {
+    // 平均モード切替
+    $(document).on('change', 'input[name="averageMode"]', function() {
+      const val = $(this).val();
+      const showSaved = val === 'savedField';
+      $('#averageFieldMappings').css('display', showSaved ? '' : 'none');
+    });
     $ownerAppId.on('change', function() {
         const appId = $(this).val();
         if (appId) {
@@ -736,6 +776,16 @@ jQuery.noConflict();
       if (!newConfig.ownerAppId || !newConfig.propertyAppId) {
           errorMessages.push('・データソースとなるアプリを両方選択してください。');
           hasError = true;
+      }
+
+      // 平均モードの検証
+      if (newConfig.averageMode === 'savedField') {
+        AVERAGE_FIELD_KEYS.forEach(({ key, label }) => {
+          if (!newConfig[key]) {
+            errorMessages.push(`・「${label}」のフィールドを選択してください。`);
+            hasError = true;
+          }
+        });
       }
 
       $('.kintone-field-select').each(function() {

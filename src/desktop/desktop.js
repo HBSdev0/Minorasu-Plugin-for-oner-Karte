@@ -309,8 +309,10 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           }
         }
 
-        // まずは現オーナー分のみ取得して先に表示（平均は非同期）
-        averagesPending = true;
+        // まずは現オーナー分のみ取得
+        const averageMode = String(config?.averageMode || 'compute');
+        const useSavedAverageFields = (averageMode === 'savedField');
+        averagesPending = !useSavedAverageFields; // savedFieldモードなら最初から平均表示可
         const [propertyResponse, ownerResponse] = await Promise.all([
             fetchWithQueryFallback(propertyAppId, config.propertyOwnerId, currentOwnerId),
             fetchWithQueryFallback(ownerAppId, config.ownerId, currentOwnerId)
@@ -329,29 +331,36 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           });
         } catch (_) {}
 
-        // 取得したデータを平均ダミーで加工（allOwnersDataは空で先に表示）
-        const processedData = processKintoneData(propertyResponse.records, ownerResponse.records, { owners: [], properties: [] });
+        // 取得したデータを加工（平均はモードに応じて後段で反映）
+        const processedData = processKintoneData(propertyResponse.records, ownerResponse.records, { owners: [], properties: [] }, currentRecord);
         data = processedData; // グローバル変数に格納
 
         // UIを構築してアプリをマウント（平均列は「集計中」、グラフは平均非表示）
         mountApp(spaceRoot, processedData);
 
-        // バックグラウンドで全オーナー平均を取得し再描画
-        fetchAllOwnersData().then((allOwnersData) => {
-          try {
-            const updated = processKintoneData(propertyResponse.records, ownerResponse.records, allOwnersData);
-            data = updated;
-            averagesPending = false;
-            updateTable();
-            updateCharts();
-          } catch (e) {
-            console.error('平均再計算に失敗:', e);
-            averagesPending = false;
-          }
-        }).catch(e => {
-          console.error('全オーナー平均の取得に失敗:', e);
+        if (useSavedAverageFields) {
+          // 自アプリの平均値フィールドを利用するため、即表示更新
           averagesPending = false;
-        });
+          updateTable();
+          updateCharts();
+        } else {
+          // バックグラウンドで全オーナー平均を取得し再描画
+          fetchAllOwnersData().then((allOwnersData) => {
+            try {
+              const updated = processKintoneData(propertyResponse.records, ownerResponse.records, allOwnersData, currentRecord);
+              data = updated;
+              averagesPending = false;
+              updateTable();
+              updateCharts();
+            } catch (e) {
+              console.error('平均再計算に失敗:', e);
+              averagesPending = false;
+            }
+          }).catch(e => {
+            console.error('全オーナー平均の取得に失敗:', e);
+            averagesPending = false;
+          });
+        }
 
     } catch (error) {
         console.error('Failed to fetch or process kintone data:', error);
@@ -361,7 +370,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   }
 
   // Kintoneのデータをアプリ用に加工する
-  function processKintoneData(propertyRecords, ownerRecords, allOwnersData) {
+  function processKintoneData(propertyRecords, ownerRecords, allOwnersData, currentAppRecord) {
     // 正規化: 設定されたフィールドコードを、タブが期待する共通キーにマッピング
     function ensureField(field, defaultValue) {
       if (field && typeof field === 'object' && field !== null && ('value' in field)) return field;
@@ -602,8 +611,29 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
       return averages;
     }
     
-    // 全オーナーの平均値を取得
-    const allOwnersAverages = calculateAllOwnersAverages(allOwnersData || { owners: [], properties: [] });
+    // 全オーナーの平均値を取得（設定により取得方法を切替）
+    let allOwnersAverages = calculateAllOwnersAverages(allOwnersData || { owners: [], properties: [] });
+    try {
+      const mode = (config && typeof config.averageMode === 'string') ? config.averageMode : 'compute';
+      if (mode === 'savedField') {
+        // 自アプリ（現在レコード）の平均値フィールドから転記
+        const rec = currentAppRecord || {};
+        const readCurrentNumber = (fieldCode) => {
+          if (!fieldCode) return 0;
+          const f = rec[fieldCode];
+          if (f && typeof f === 'object' && f !== null && 'value' in f) return parseFloat(f.value) || 0;
+          return parseFloat(rec[fieldCode]) || 0;
+        };
+        const ae = readCurrentNumber(config?.avgAssetEfficiencyField);
+        const roaAvg = readCurrentNumber(config?.avgRoaField);
+        const it = readCurrentNumber(config?.avgIncomeTaxField);
+        const op = readCurrentNumber(config?.avgOperatingCostField);
+        const noiAvg = readCurrentNumber(config?.avgNoiField);
+        allOwnersAverages = { assetEfficiency: ae, roa: roaAvg, operatingCost: op, incomeTax: it, inheritanceTax: 0, borrowing: 0, noi: noiAvg };
+      }
+    } catch (e) {
+      console.warn('平均の取得方法切替で例外が発生しました。computeにフォールバックします。', e);
+    }
 
     const roaCurrent = totalInheritanceValue > 0 ? (totalIncome / totalInheritanceValue) * 100 : 0;
     const operatingCostCurrent = totalFullRent > 0 ? (totalOperatingCost / totalFullRent) * 100 : 0;
