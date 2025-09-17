@@ -171,6 +171,14 @@ jQuery.noConflict();
     }
   };
 
+  // MRADERCHART風色選択の状態更新関数
+  function updateColorSelection(role, selectedColor) {
+    // プリセット色の選択状態を更新
+    $(`.color-option[data-role="${role}"]`).removeClass('selected');
+    $(`.color-option[data-role="${role}"][data-color="${selectedColor.toLowerCase()}"], 
+      .color-option[data-role="${role}"][data-color="${selectedColor.toUpperCase()}"]`).addClass('selected');
+  }
+
   // タブ切り替え
   $('.tab-button').on('click', function() {
     const tabName = $(this).data('tab');
@@ -510,6 +518,20 @@ jQuery.noConflict();
       const showSaved = mode === 'savedField';
       $('#averageFieldMappings').css('display', showSaved ? '' : 'none');
 
+      // グラフ配色: 復元（MRADERCHART風の選択状態表示を追加）
+      if (config.colorCurrent) {
+        $('#colorCurrent').val(config.colorCurrent);
+        updateColorSelection('current', config.colorCurrent);
+      }
+      if (config.colorAverage) {
+        $('#colorAverage').val(config.colorAverage);
+        updateColorSelection('average', config.colorAverage);
+      }
+      if (config.colorForecast) {
+        $('#colorForecast').val(config.colorForecast);
+        updateColorSelection('forecast', config.colorForecast);
+      }
+
       if (config.ownerAppId) {
         // オーナーID設定
         populateOwnerIdMapping(config.ownerAppId, $ownerIdMappings, 'ownerId', 'オーナーID');
@@ -580,7 +602,10 @@ jQuery.noConflict();
       currentAppOwnerId: $currentAppOwnerId.val() || '',
       ownerAppId: $ownerAppId.val() || '',
       propertyAppId: $propertyAppId.val() || '',
-      averageMode: ($('input[name="averageMode"]:checked').val() || 'compute')
+      averageMode: ($('input[name="averageMode"]:checked').val() || 'compute'),
+      colorCurrent: $('#colorCurrent').val() || '#007bff',
+      colorAverage: $('#colorAverage').val() || '#ff5722',
+      colorForecast: $('#colorForecast').val() || '#4caf50'
     };
 
     $('.kintone-field-select').each(function() {
@@ -675,45 +700,85 @@ jQuery.noConflict();
       const showSaved = val === 'savedField';
       $('#averageFieldMappings').css('display', showSaved ? '' : 'none');
     });
+
+    // MRADERCHART風色選択UI（テンプレート機能は削除）
+
+    // カラーピッカーの更新（MRADERCHART風の選択状態表示を追加）
+    $(document).on('input change', '#colorCurrent', function() {
+      const color = $(this).val();
+      updateColorSelection('current', color);
+    });
+    $(document).on('input change', '#colorAverage', function() {
+      const color = $(this).val();
+      updateColorSelection('average', color);
+    });
+    $(document).on('input change', '#colorForecast', function() {
+      const color = $(this).val();
+      updateColorSelection('forecast', color);
+    });
+
+    // パレット（正方形）クリックで各役割の色に適用（MRADERCHART風の選択状態表示を追加）
+    $(document).on('click', '.color-option', function() {
+      const color = $(this).data('color');
+      const role = $(this).data('role');
+      
+      // 同じrole内の他の色オプションから選択状態を削除
+      $(`.color-option[data-role="${role}"]`).removeClass('selected');
+      
+      // クリックされた色オプションに選択状態を追加
+      $(this).addClass('selected');
+      
+      if (role === 'current') {
+        $('#colorCurrent').val(color);
+        updateColorSelection('current', color);
+      } else if (role === 'average') {
+        $('#colorAverage').val(color);
+        updateColorSelection('average', color);
+      } else if (role === 'forecast') {
+        $('#colorForecast').val(color);
+        updateColorSelection('forecast', color);
+      }
+    });
+
     $ownerAppId.on('change', function() {
-        const appId = $(this).val();
-        if (appId) {
-            // オーナーID設定
-            populateOwnerIdMapping(appId, $ownerIdMappings, 'ownerId', 'オーナーID');
-            // フィールドマッピング（オーナーIDを除く）
-            const ownerFieldMapWithoutId = Object.keys(OWNER_FIELD_MAP)
-              .filter(key => key !== 'ownerId')
-              .reduce((obj, key) => {
-                obj[key] = OWNER_FIELD_MAP[key];
-                return obj;
-              }, {});
-            populateFieldMappings(appId, $ownerFieldMappings, ownerFieldMapWithoutId);
-        } else {
-            $ownerIdMappings.empty();
-            $ownerFieldMappings.empty();
-        }
+      const appId = $(this).val();
+      if (appId) {
+        // オーナーID設定
+        populateOwnerIdMapping(appId, $ownerIdMappings, 'ownerId', 'オーナーID');
+        // フィールドマッピング（オーナーIDを除く）
+        const ownerFieldMapWithoutId = Object.keys(OWNER_FIELD_MAP)
+          .filter(key => key !== 'ownerId')
+          .reduce((obj, key) => {
+            obj[key] = OWNER_FIELD_MAP[key];
+            return obj;
+          }, {});
+        populateFieldMappings(appId, $ownerFieldMappings, ownerFieldMapWithoutId);
+      } else {
+        $ownerIdMappings.empty();
+        $ownerFieldMappings.empty();
+      }
     });
 
     $propertyAppId.on('change', function() {
-        const appId = $(this).val();
-        if (appId) {
-            // 物件のオーナーID設定
-            populateOwnerIdMapping(appId, $propertyOwnerIdMappings, 'propertyOwnerId', 'オーナーID');
-            // 物件名設定
-            populatePropertyNameMapping(appId, $propertyNameMappings, 'propertyName', '物件名');
-            // フィールドマッピング（オーナーIDと物件名を除く）
-            const propertyFieldMapWithoutIdAndName = Object.keys(PROPERTY_FIELD_MAP)
-              .filter(key => key !== 'propertyOwnerId' && key !== 'propertyName')
-              .reduce((obj, key) => {
-                obj[key] = PROPERTY_FIELD_MAP[key];
-                return obj;
-              }, {});
-            populateFieldMappings(appId, $propertyFieldMappings, propertyFieldMapWithoutIdAndName);
-        } else {
-            $propertyOwnerIdMappings.empty();
-            $propertyNameMappings.empty();
-            $propertyFieldMappings.empty();
-        }
+      const appId = $(this).val();
+      if (appId) {
+        // 物件のオーナーID設定
+        populateOwnerIdMapping(appId, $propertyOwnerIdMappings, 'propertyOwnerId', 'オーナーID');
+        // 物件名設定
+        populatePropertyNameMapping(appId, $propertyNameMappings, 'propertyName', '物件名');
+        // フィールドマッピング（オーナーIDと物件名を除く）
+        const propertyFieldMapWithoutIdAndName = Object.keys(PROPERTY_FIELD_MAP)
+          .filter(key => key !== 'propertyOwnerId' && key !== 'propertyName')
+          .reduce((obj, key) => {
+            obj[key] = PROPERTY_FIELD_MAP[key];
+            return obj;
+          }, {});
+        populateFieldMappings(appId, $propertyFieldMappings, propertyFieldMapWithoutIdAndName);
+      } else {
+        $propertyOwnerIdMappings.empty();
+        $propertyNameMappings.empty();
+        $propertyFieldMappings.empty();
+      }
     });
 
     // 成績行の追加/削除（動的UI）
@@ -787,6 +852,15 @@ jQuery.noConflict();
           }
         });
       }
+
+      // 配色の検証
+      ['colorCurrent','colorAverage','colorForecast'].forEach(key => {
+        const val = newConfig[key];
+        if (val && !/^#([0-9a-fA-F]{6})$/.test(val)) {
+          errorMessages.push('・カスタム色は#RRGGBB形式で指定してください。');
+          hasError = true;
+        }
+      });
 
       $('.kintone-field-select').each(function() {
           if (!$(this).val()) {

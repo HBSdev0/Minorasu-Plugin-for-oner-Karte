@@ -47,12 +47,77 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   const FIELDS = ['current','average','forecast'];
   const CHART_LABELS = ['資産効率(%)','ROA(%)','所得税率(%)','運営コスト率(%)','NOI率(%)'];
   // 将来復活予定: '相続税率(%)','借り入れ状況(%)'
-  // 色覚異常対応カラーパレット（WCAG準拠）
-  const DATASET_STYLE = [
-      { label: '現状', border: 'rgb(0, 123, 255)', bgRadar: 'rgba(0, 123, 255, 0.2)', bgBar: 'rgba(0, 123, 255, 0.8)', bwRadar: 2, bwBar: 1 }, // 青（Blue）
-      { label: '平均', border: 'rgb(255, 87, 34)', bgRadar: 'rgba(255, 87, 34, 0.2)', bgBar: 'rgba(255, 87, 34, 0.8)', bwRadar: 2, bwBar: 1 }, // オレンジ（Orange）
-      { label: '試算', border: 'rgb(76, 175, 80)', bgRadar: 'rgba(76, 175, 80, 0.2)', bgBar: 'rgba(76, 175, 80, 0.8)', bwRadar: 2, bwBar: 1 } // 緑（Green）
-  ];
+  // カラー設定ユーティリティ
+  function hexToRgb(color) {
+    try {
+      const m = /^#?([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})$/.exec(String(color || '').trim());
+      if (!m) return null;
+      return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+    } catch (_) { return null; }
+  }
+  function parseRgb(color) {
+    try {
+      const m = /^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/.exec(String(color || '').trim());
+      if (!m) return null;
+      return { r: parseInt(m[1], 10), g: parseInt(m[2], 10), b: parseInt(m[3], 10) };
+    } catch (_) { return null; }
+  }
+  function toRgba(color, alpha) {
+    const hex = hexToRgb(color);
+    if (hex) return `rgba(${hex.r}, ${hex.g}, ${hex.b}, ${alpha})`;
+    const rgb = parseRgb(color);
+    if (rgb) return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    // フォールバック
+    return color;
+  }
+
+  function getTemplateColors(name) {
+    const tpl = String(name || 'classic');
+    if (tpl === 'tealPurpleGray') {
+      return ['#00897B', '#7E57C2', '#607D8B'];
+    }
+    if (tpl === 'redBlueYellow') {
+      return ['#E53935', '#1E88E5', '#FDD835'];
+    }
+    if (tpl === 'colorblindSafe') {
+      // Okabe-Ito (一例)
+      return ['#0072B2', '#E69F00', '#009E73'];
+    }
+    // classic
+    return ['#007BFF', '#FF5722', '#4CAF50'];
+  }
+
+  function buildDatasetStyleFromConfig() {
+    // デフォルトはテンプレート: classic
+    let currentColor = '#007BFF';
+    let averageColor = '#FF5722';
+    let forecastColor = '#4CAF50';
+    const mode = (config && typeof config.colorMode === 'string') ? config.colorMode : 'template';
+    if (mode === 'custom') {
+      currentColor = String(config?.colorCurrent || currentColor);
+      averageColor = String(config?.colorAverage || averageColor);
+      forecastColor = String(config?.colorForecast || forecastColor);
+    } else {
+      const colors = getTemplateColors(config?.colorTemplate || 'classic');
+      currentColor = colors[0];
+      averageColor = colors[1];
+      forecastColor = colors[2];
+    }
+    const base = [
+      { label: '現状', color: currentColor },
+      { label: '平均', color: averageColor },
+      { label: '試算', color: forecastColor }
+    ];
+    return base.map(e => ({
+      label: e.label,
+      border: toRgba(e.color, 1),
+      bgRadar: toRgba(e.color, 0.2),
+      bgBar: toRgba(e.color, 0.8),
+      bwRadar: 2,
+      bwBar: 1
+    }));
+  }
+  const DATASET_STYLE = buildDatasetStyleFromConfig();
 
   // データオブジェクト: Kintoneから取得するように変更するため削除
   // const data = { ... };

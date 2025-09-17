@@ -3,6 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>BI Dashboard Plugin Settings</title>
+    <style>
+      /* MRADERCHARTスタイルの色選択UI */
+      .color-selection { margin-top: 10px; }
+      .color-options { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+      .color-option { 
+        width: 30px; 
+        height: 30px; 
+        border: 2px solid #ddd; 
+        border-radius: 4px; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+      }
+      .color-option:hover { 
+        border-color: #3498db; 
+        transform: scale(1.1); 
+      }
+      .color-option.selected { 
+        border-color: #2c3e50; 
+        border-width: 3px; 
+      }
+      .color-picker-container { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        margin-top: 8px;
+      }
+      .color-picker { 
+        width: 40px; 
+        height: 30px; 
+        border: 1px solid #ddd; 
+        border-radius: 4px; 
+        cursor: pointer; 
+      }
+      .color-picker-label { 
+        font-size: 0.9rem; 
+        color: #666; 
+      }
+      .role-color-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 20px; 
+      }
+      .role-color-item { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px; 
+      }
+      .role-color-item label { 
+        font-weight: 600; 
+        color: #2c3e50; 
+        font-size: 1rem; 
+      }
+      
+      /* レスポンシブ対応 */
+      @media (max-width: 768px) { 
+        .role-color-group { gap: 15px; }
+        .color-options { gap: 4px; }
+        .color-option { width: 28px; height: 28px; }
+      }
+    </style>
 </head>
 <body>
     <div class="plugin-container">
@@ -187,6 +247,84 @@
                         <select id="avgNoiField" class="kintone-current-app-field-select average-field-select">
                             <option value="">フィールドを選択してください</option>
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>グラフ配色</h2>
+                <p class="help-text">各系列（現状・平均・試算）ごとに、カラーパレットから色を選ぶかカスタムで指定します。</p>
+                <div class="role-color-group">
+                    <div class="role-color-item">
+                        <label>現状 色</label>
+                        <div class="color-selection">
+                            <div class="color-options" id="paletteCurrent">
+                                <div class="color-option selected" data-role="current" data-color="#007BFF" style="background-color:#007BFF"></div>
+                                <div class="color-option" data-role="current" data-color="#1E88E5" style="background-color:#1E88E5"></div>
+                                <div class="color-option" data-role="current" data-color="#4CAF50" style="background-color:#4CAF50"></div>
+                                <div class="color-option" data-role="current" data-color="#009E73" style="background-color:#009E73"></div>
+                                <div class="color-option" data-role="current" data-color="#E69F00" style="background-color:#E69F00"></div>
+                                <div class="color-option" data-role="current" data-color="#FF5722" style="background-color:#FF5722"></div>
+                                <div class="color-option" data-role="current" data-color="#E53935" style="background-color:#E53935"></div>
+                                <div class="color-option" data-role="current" data-color="#AB47BC" style="background-color:#AB47BC"></div>
+                                <div class="color-option" data-role="current" data-color="#7E57C2" style="background-color:#7E57C2"></div>
+                                <div class="color-option" data-role="current" data-color="#607D8B" style="background-color:#607D8B"></div>
+                                <div class="color-option" data-role="current" data-color="#FDD835" style="background-color:#FDD835"></div>
+                                <div class="color-option" data-role="current" data-color="#00897B" style="background-color:#00897B"></div>
+                            </div>
+                            <div class="color-picker-container">
+                                <input type="color" class="color-picker" id="colorCurrent" data-role="current" value="#007bff">
+                                <span class="color-picker-label">カスタム</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="role-color-item">
+                        <label>平均 色</label>
+                        <div class="color-selection">
+                            <div class="color-options" id="paletteAverage">
+                                <div class="color-option" data-role="average" data-color="#007BFF" style="background-color:#007BFF"></div>
+                                <div class="color-option" data-role="average" data-color="#1E88E5" style="background-color:#1E88E5"></div>
+                                <div class="color-option" data-role="average" data-color="#4CAF50" style="background-color:#4CAF50"></div>
+                                <div class="color-option" data-role="average" data-color="#009E73" style="background-color:#009E73"></div>
+                                <div class="color-option" data-role="average" data-color="#E69F00" style="background-color:#E69F00"></div>
+                                <div class="color-option selected" data-role="average" data-color="#FF5722" style="background-color:#FF5722"></div>
+                                <div class="color-option" data-role="average" data-color="#E53935" style="background-color:#E53935"></div>
+                                <div class="color-option" data-role="average" data-color="#AB47BC" style="background-color:#AB47BC"></div>
+                                <div class="color-option" data-role="average" data-color="#7E57C2" style="background-color:#7E57C2"></div>
+                                <div class="color-option" data-role="average" data-color="#607D8B" style="background-color:#607D8B"></div>
+                                <div class="color-option" data-role="average" data-color="#FDD835" style="background-color:#FDD835"></div>
+                                <div class="color-option" data-role="average" data-color="#00897B" style="background-color:#00897B"></div>
+                            </div>
+                            <div class="color-picker-container">
+                                <input type="color" class="color-picker" id="colorAverage" data-role="average" value="#ff5722">
+                                <span class="color-picker-label">カスタム</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="role-color-item">
+                        <label>試算 色</label>
+                        <div class="color-selection">
+                            <div class="color-options" id="paletteForecast">
+                                <div class="color-option" data-role="forecast" data-color="#007BFF" style="background-color:#007BFF"></div>
+                                <div class="color-option" data-role="forecast" data-color="#1E88E5" style="background-color:#1E88E5"></div>
+                                <div class="color-option selected" data-role="forecast" data-color="#4CAF50" style="background-color:#4CAF50"></div>
+                                <div class="color-option" data-role="forecast" data-color="#009E73" style="background-color:#009E73"></div>
+                                <div class="color-option" data-role="forecast" data-color="#E69F00" style="background-color:#E69F00"></div>
+                                <div class="color-option" data-role="forecast" data-color="#FF5722" style="background-color:#FF5722"></div>
+                                <div class="color-option" data-role="forecast" data-color="#E53935" style="background-color:#E53935"></div>
+                                <div class="color-option" data-role="forecast" data-color="#AB47BC" style="background-color:#AB47BC"></div>
+                                <div class="color-option" data-role="forecast" data-color="#7E57C2" style="background-color:#7E57C2"></div>
+                                <div class="color-option" data-role="forecast" data-color="#607D8B" style="background-color:#607D8B"></div>
+                                <div class="color-option" data-role="forecast" data-color="#FDD835" style="background-color:#FDD835"></div>
+                                <div class="color-option" data-role="forecast" data-color="#00897B" style="background-color:#00897B"></div>
+                            </div>
+                            <div class="color-picker-container">
+                                <input type="color" class="color-picker" id="colorForecast" data-role="forecast" value="#4caf50">
+                                <span class="color-picker-label">カスタム</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
