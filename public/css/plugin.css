@@ -1,12 +1,23 @@
 /* 成績基準モーダル */
 .grade-info-button {
-  margin-left: 6px;
-  width: 20px; height: 20px;
+  margin-left: 8px;
+  width: 28px; height: 28px;
   padding: 0;
-  border: 1px solid #d0d5db; border-radius: 50%;
-  background: #fff; cursor: pointer; font-weight: 700; line-height: 18px; text-align: center; font-size: 12px;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #3b82f6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.grade-info-button:hover { background: #f3f4f6; }
+.grade-info-button:hover {
+  background: #3b82f6;
+  color: white;
+}
 
 .grade-info-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.35);
@@ -36,11 +47,12 @@
 }
 
 .bi-dashboard-plugin body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f8f9fa;
-    color: #333;
-    font-size: 14px;
+    color: #2c3e50;
+    font-size: 16px;
     overflow-y: scroll; /* 常時スクロールバーで幅安定 */
+    min-height: 100vh;
 }
 
 .bi-dashboard-plugin html {
@@ -66,11 +78,11 @@
 }
 
 .bi-dashboard-plugin .table-section, .chart-section, .bottom-section {
-    background: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .bi-dashboard-plugin .table-section {
@@ -79,12 +91,13 @@
 }
 
 .bi-dashboard-plugin .table-section h2 {
-    margin-bottom: 6px;
-    color: #374151;
+    margin-bottom: 12px;
+    color: #1f2937;
     border-bottom: 2px solid #3b82f6;
-    padding-bottom: 4px;
-    font-size: 12px;
-    font-weight: 600;
+    padding-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
 .bi-dashboard-plugin .table-container {
@@ -95,27 +108,33 @@
 .bi-dashboard-plugin table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 15px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .bi-dashboard-plugin th, td {
-    padding: 4px 6px;
+    padding: 12px 16px;
     text-align: left;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgba(229, 231, 235, 0.6);
+    transition: background-color 0.2s ease;
 }
 
 .bi-dashboard-plugin th {
-    background-color: #f3f4f6;
-    color: #374151;
-    font-weight: 600;
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 14px;
     position: sticky;
     top: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-/* ホバー効果を無効化 */
-/* .bi-dashboard-plugin tr:hover {
-    background-color: #f9fafb;
-} */
+.bi-dashboard-plugin tr:hover {
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
 
 .bi-dashboard-plugin tr:nth-child(even) {
     background-color: #fafafa;
@@ -131,12 +150,13 @@
 }
 
 .bi-dashboard-plugin .chart-section h2 {
-    margin-bottom: 6px;
-    color: #374151;
+    margin-bottom: 12px;
+    color: #1f2937;
     border-bottom: 2px solid #ef4444;
-    padding-bottom: 4px;
-    font-size: 12px;
-    font-weight: 600;
+    padding-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
 .bi-dashboard-plugin .chart-container {
@@ -154,24 +174,23 @@
 }
 
 .bi-dashboard-plugin .chart-toggle-button {
-    background-color: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    border-radius: 3px;
-    padding: 4px 8px;
-    font-size: 12px;
-    font-weight: 500;
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ホバー効果を無効化 */
-/* .bi-dashboard-plugin .chart-toggle-button:hover {
-    background-color: #e5e7eb;
-} */
+.bi-dashboard-plugin .chart-toggle-button:hover {
+    background: #e2e8f0;
+}
 
 .bi-dashboard-plugin .chart-toggle-button.active {
-    background-color: #3b82f6;
+    background: #3b82f6;
     color: #ffffff;
     border-color: #3b82f6;
 }
@@ -187,10 +206,11 @@
 }
 
 .bi-dashboard-plugin .chart-item h3 {
-    margin-bottom: 4px;
-    color: #374151;
-    font-size: 13px;
-    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
 .bi-dashboard-plugin .chart-item canvas {
@@ -237,27 +257,29 @@
 }
 
 .bi-dashboard-plugin .tab-button {
-    background-color: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: #6b7280;
-    padding: 6px 12px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    padding: 12px 20px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px 8px 0 0;
+    margin-right: 2px;
 }
 
-/* ホバー効果を無効化 */
-/* .bi-dashboard-plugin .tab-button:hover {
-    background-color: #f1f5f9;
-    color: #374151;
-} */
+.bi-dashboard-plugin .tab-button:hover:not(.active) {
+    background: #f1f5f9;
+    color: #475569;
+}
 
 .bi-dashboard-plugin .tab-button.active {
-    background-color: #ffffff;
+    background: #ffffff;
     color: #3b82f6;
-    border-bottom-color: #3b82f6;
+    border-bottom: 3px solid #3b82f6;
+    z-index: 1;
 }
 
 .bi-dashboard-plugin .tab-content {
@@ -273,12 +295,13 @@
 }
 
 .bi-dashboard-plugin .tab-content h3 {
-    margin-bottom: 8px;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 4px;
-    font-size: 14px;
-    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
 .bi-dashboard-plugin .form-container {
@@ -324,12 +347,14 @@
 }
 
 .bi-dashboard-plugin .roa-table input {
-    width: 80px;
+    width: 100%;
+    min-width: 0;
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
     font-size: 12px;
     text-align: right;
+    box-sizing: border-box;
 }
 
 .bi-dashboard-plugin .roa-table input:focus {
@@ -380,11 +405,14 @@
 }
 
 .bi-dashboard-plugin .roa-pivot-table input {
+    width: 100%;
+    min-width: 0;
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
     font-size: 12px;
     text-align: right;
+    box-sizing: border-box;
 }
 
 .bi-dashboard-plugin .roa-pivot-table input[readonly] {
@@ -475,12 +503,14 @@
 
 .bi-dashboard-plugin .operating-cost-table input,
 .bi-dashboard-plugin .operating-cost-pivot-table input {
-    width: 80px;
+    width: 100%;
+    min-width: 0;
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
     font-size: 12px;
     text-align: right;
+    box-sizing: border-box;
 }
 
 .bi-dashboard-plugin .operating-cost-table input:focus,
@@ -728,38 +758,43 @@
 }
 
 .bi-dashboard-plugin .form-group input {
-    padding: 4px 6px;
-    border: 1px solid #d1d5db;
-    border-radius: 3px;
-    font-size: 13px;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
     background: #ffffff;
-    transition: border-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bi-dashboard-plugin .form-group input:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+    background: #ffffff;
 }
 
 .bi-dashboard-plugin .update-button {
     grid-column: 1 / -1;
-    background-color: #3b82f6;
+    background: #3b82f6;
     color: #ffffff;
     border: none;
-    border-radius: 3px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 500;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    margin-top: 6px;
-    transition: background-color 0.2s;
+    margin-top: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-/* ホバー効果を無効化 */
-/* .bi-dashboard-plugin .update-button:hover {
-    background-color: #2563eb;
-} */
+.bi-dashboard-plugin .update-button:hover {
+    background: #2563eb;
+}
+
+.bi-dashboard-plugin .update-button:active {
+    background: #1d4ed8;
+}
 
 
 @media (max-width: 768px) {

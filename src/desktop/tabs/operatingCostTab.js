@@ -9,8 +9,8 @@ export function createOperatingCostTab(appData) {
         <tr data-prop-index="${i}" data-scenario="current" class="readonly-row">
             <td rowspan="2">${prop.property_name?.value ?? ''}</td>
             <td>現状</td>
-            <td><input type="text" id="operatingCostProp_${i}_current_rate" value="0.0" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_noiRate" value="0.0" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_rate" value="0" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_noiRate" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_propertyTax" value="${prop.property_tax?.value ?? 0}" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_management" value="${prop.management_fee?.value ?? 0}" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_repair" value="${prop.building_repair_cost?.value ?? 0}" readonly></td>
@@ -23,8 +23,8 @@ export function createOperatingCostTab(appData) {
         </tr>
         <tr data-prop-index="${i}" data-scenario="forecast">
             <td>試算</td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_rate" value="0.0" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_noiRate" value="0.0" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_rate" value="0" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_noiRate" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_propertyTax" value="${prop.property_tax?.value ?? 0}"></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_management" value="${prop.management_fee?.value ?? 0}"></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_repair" value="${prop.building_repair_cost?.value ?? 0}"></td>
@@ -59,8 +59,8 @@ export function createOperatingCostTab(appData) {
                 <tbody>
                     <tr>
                         <td class="row-label">現状値</td>
-                        <td><input type="text" id="operatingCostTblCurrentRate" value="0.0" readonly></td>
-                        <td><input type="text" id="operatingCostTblCurrentNoiRate" value="0.0" readonly></td>
+                        <td><input type="text" id="operatingCostTblCurrentRate" value="0" readonly></td>
+                        <td><input type="text" id="operatingCostTblCurrentNoiRate" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblCurrentPropertyTax" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblCurrentManagement" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblCurrentRepair" value="0" readonly></td>
@@ -73,8 +73,8 @@ export function createOperatingCostTab(appData) {
                     </tr>
                     <tr>
                         <td class="row-label">試算値</td>
-                        <td><input type="text" id="operatingCostTblForecastRate" value="0.0" readonly></td>
-                        <td><input type="text" id="operatingCostTblForecastNoiRate" value="0.0" readonly></td>
+                        <td><input type="text" id="operatingCostTblForecastRate" value="0" readonly></td>
+                        <td><input type="text" id="operatingCostTblForecastNoiRate" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblForecastPropertyTax" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblForecastManagement" value="0" readonly></td>
                         <td><input type="text" id="operatingCostTblForecastRepair" value="0" readonly></td>
@@ -124,8 +124,8 @@ export function createOperatingCostTab(appData) {
             <input type="number" id="operatingCostCurrent" value="${initial.current}" min="0" max="100" step="0.1" style="display:none;">
             <input type="number" id="operatingCostForecast" value="${initial.forecast}" min="0" max="100" step="0.1" style="display:none;">
             <!-- NOI率 連動用（非表示） -->
-            <input type="number" id="noiCurrent" value="0.0" min="0" max="100" step="0.1" style="display:none;">
-            <input type="number" id="noiForecast" value="0.0" min="0" max="100" step="0.1" style="display:none;">
+            <input type="number" id="noiCurrent" value="0" min="0" max="100" step="0.1" style="display:none;">
+            <input type="number" id="noiForecast" value="0" min="0" max="100" step="0.1" style="display:none;">
         </div>
     `;
 

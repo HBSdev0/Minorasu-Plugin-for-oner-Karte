@@ -57,16 +57,16 @@ export function createRoaTab(appData) {
                         <td><input type="text" id="roaTblCurrentMarketPrice" value="0" readonly></td>
                         <td><input type="text" id="roaTblCurrentIncome" value="0" readonly></td>
                         <td><input type="text" id="roaTblCurrentInheritance" value="0" readonly></td>
-                        <td><input type="text" id="roaTblCurrentAssetEfficiency" value="0.0" readonly></td>
-                        <td><input type="text" id="roaTblCurrentRoa" value="0.0" readonly></td>
+                        <td><input type="text" id="roaTblCurrentAssetEfficiency" value="0" readonly></td>
+                        <td><input type="text" id="roaTblCurrentRoa" value="0" readonly></td>
                     </tr>
                     <tr>
                         <td class="row-label">試算値</td>
                         <td><input type="text" id="roaTblForecastMarketPrice" value="0" readonly></td>
                         <td><input type="text" id="roaTblForecastIncome" value="0" readonly></td>
                         <td><input type="text" id="roaTblForecastInheritance" value="0" readonly></td>
-                        <td><input type="text" id="roaTblForecastAssetEfficiency" value="0.0" readonly></td>
-                        <td><input type="text" id="roaTblForecastRoa" value="0.0" readonly></td>
+                        <td><input type="text" id="roaTblForecastAssetEfficiency" value="0" readonly></td>
+                        <td><input type="text" id="roaTblForecastRoa" value="0" readonly></td>
                     </tr>
                 </tbody>
             </table>

@@ -88,20 +88,20 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   }
 
   function buildDatasetStyleFromConfig() {
-    // デフォルトはテンプレート: classic
+    // デフォルト色
     let currentColor = '#007BFF';
     let averageColor = '#FF5722';
     let forecastColor = '#4CAF50';
-    const mode = (config && typeof config.colorMode === 'string') ? config.colorMode : 'template';
-    if (mode === 'custom') {
-      currentColor = String(config?.colorCurrent || currentColor);
-      averageColor = String(config?.colorAverage || averageColor);
-      forecastColor = String(config?.colorForecast || forecastColor);
-    } else {
-      const colors = getTemplateColors(config?.colorTemplate || 'classic');
-      currentColor = colors[0];
-      averageColor = colors[1];
-      forecastColor = colors[2];
+    
+    // 設定画面で色が設定されている場合はそれを使用
+    if (config?.colorCurrent) {
+      currentColor = String(config.colorCurrent);
+    }
+    if (config?.colorAverage) {
+      averageColor = String(config.colorAverage);
+    }
+    if (config?.colorForecast) {
+      forecastColor = String(config.colorForecast);
     }
     const base = [
       { label: '現状', color: currentColor },
