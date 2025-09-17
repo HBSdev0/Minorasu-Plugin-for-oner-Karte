@@ -1,45 +1,3 @@
-/* 成績基準モーダル */
-.grade-info-button {
-  margin-left: 8px;
-  width: 28px; height: 28px;
-  padding: 0;
-  border: 2px solid #3b82f6;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  font-weight: 700;
-  line-height: 24px;
-  text-align: center;
-  font-size: 14px;
-  color: #3b82f6;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.grade-info-button:hover {
-  background: #3b82f6;
-  color: white;
-}
-
-.grade-info-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999;
-}
-.grade-info-modal {
-  width: 800px; max-width: 90vw; max-height: 80vh;
-  background: #fff; border-radius: 8px; overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  display: flex; flex-direction: column;
-}
-.grade-info-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e9ecef; }
-.grade-info-header h3 { margin: 0; font-size: 16px; }
-.grade-info-close { border: none; background: transparent; cursor: pointer; font-size: 20px; line-height: 20px; }
-.grade-info-body { padding: 12px 16px; overflow: auto; }
-.grade-info-section { margin-bottom: 16px; }
-.grade-info-section h4 { margin: 8px 0; font-size: 14px; }
-.grade-info-table { width: 100%; border-collapse: collapse; }
-.grade-info-table th, .grade-info-table td { border: 1px solid #e1e5e9; padding: 6px 8px; text-align: center; }
-.grade-info-table thead th { background: #f8f9fa; }
-.grade-badge { display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 999px; background: #eef2ff; color: #4f46e5; font-weight: 700; }
 .bi-dashboard-plugin * {
     margin: 0;
     padding: 0;
@@ -72,12 +30,13 @@
 }
 
 .bi-dashboard-plugin .top-section {
-    display: flex;
+    display: grid; /* flexからgridに変更 */
+    grid-template-columns: 1fr 1fr 300px; /* 3カラムレイアウト */
     gap: 8px;
     height: 50vh;
 }
 
-.bi-dashboard-plugin .table-section, .chart-section, .bottom-section {
+.bi-dashboard-plugin .table-section, .chart-section, .bottom-section, .help-section {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -86,7 +45,6 @@
 }
 
 .bi-dashboard-plugin .table-section {
-    flex: 0 0 35%;
     padding: 6px;
 }
 
@@ -108,7 +66,7 @@
 .bi-dashboard-plugin table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 15px;
+    font-size: 16px;
     border-radius: 8px;
     overflow: hidden;
 }
@@ -141,12 +99,69 @@
 }
 
 .bi-dashboard-plugin .chart-section {
-    flex: 0 0 65%;
     padding: 6px;
     display: flex;
     flex-direction: column;
     max-height: 55vh;
     overflow: hidden;
+}
+
+/* 説明欄のスタイルを追加 */
+.bi-dashboard-plugin .help-section {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.bi-dashboard-plugin .help-section h3 {
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #3498db;
+}
+
+.bi-dashboard-plugin .help-section h4 {
+    color: #34495e;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 15px 0 8px 0;
+}
+
+.bi-dashboard-plugin .help-section p {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.bi-dashboard-plugin .help-section ul {
+    margin: 8px 0 15px 20px;
+    color: #555;
+}
+
+.bi-dashboard-plugin .help-section li {
+    margin-bottom: 5px;
+}
+
+.bi-dashboard-plugin .help-section .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px;
+}
+
+.bi-dashboard-plugin .help-section .score-table th,
+.bi-dashboard-plugin .help-section .score-table td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+}
+
+.bi-dashboard-plugin .help-section .score-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
 }
 
 .bi-dashboard-plugin .chart-section h2 {
@@ -263,7 +278,7 @@
     color: #64748b;
     padding: 12px 20px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 8px 8px 0 0;
@@ -315,7 +330,7 @@
 .bi-dashboard-plugin .roa-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
     min-width: 800px;
 }
 
@@ -352,7 +367,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 12px;
+    font-size: 14px;
     text-align: right;
     box-sizing: border-box;
 }
@@ -374,6 +389,12 @@
     box-shadow: none;
 }
 
+/* 所得税率タブの年賃料の列幅を調整 */
+.bi-dashboard-plugin .income-tax-table th:nth-child(2),
+.bi-dashboard-plugin .income-tax-table td:nth-child(2) {
+    min-width: 120px;
+}
+
 /* ROAタブ内で上段テーブルとピボットテーブルの間隔を空ける */
 .bi-dashboard-plugin .tab-content[data-tab="roa"] .roa-table + .roa-pivot-table {
     margin-top: 12px;
@@ -383,7 +404,7 @@
 .bi-dashboard-plugin .roa-pivot-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
     min-width: 800px;
 }
 
@@ -410,7 +431,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 12px;
+    font-size: 14px;
     text-align: right;
     box-sizing: border-box;
 }
@@ -466,7 +487,7 @@
 .bi-dashboard-plugin .operating-cost-pivot-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
     min-width: 1200px; /* 列が多いのでROAより広く */
 }
 
@@ -508,7 +529,7 @@
     padding: 2px 4px;
     border: 1px solid #d1d5db;
     border-radius: 2px;
-    font-size: 12px;
+    font-size: 14px;
     text-align: right;
     box-sizing: border-box;
 }
@@ -531,6 +552,37 @@
     outline: none;
     border-color: #d1d5db;
     box-shadow: none;
+}
+
+/* 運営コストタブの列幅調整 */
+.bi-dashboard-plugin .operating-cost-table th:nth-child(2),
+.bi-dashboard-plugin .operating-cost-table td:nth-child(2),
+.bi-dashboard-plugin .operating-cost-pivot-table th:nth-child(3),
+.bi-dashboard-plugin .operating-cost-pivot-table td:nth-child(3) {
+    min-width: 80px;
+    width: 80px;
+}
+.bi-dashboard-plugin .operating-cost-table th:nth-child(10),
+.bi-dashboard-plugin .operating-cost-table td:nth-child(10),
+.bi-dashboard-plugin .operating-cost-pivot-table th:nth-child(11),
+.bi-dashboard-plugin .operating-cost-pivot-table td:nth-child(11) {
+    min-width: 98px;
+}
+
+/* 運営コストタブのNOI列の幅を調整 */
+.bi-dashboard-plugin .operating-cost-table th:nth-child(12),
+.bi-dashboard-plugin .operating-cost-table td:nth-child(12),
+.bi-dashboard-plugin .operating-cost-pivot-table th:nth-child(13),
+.bi-dashboard-plugin .operating-cost-pivot-table td:nth-child(13) {
+    min-width: 150px;
+}
+
+/* 運営コストタブの運営コスト合計列の幅を調整 */
+.bi-dashboard-plugin .operating-cost-table th:nth-child(11),
+.bi-dashboard-plugin .operating-cost-table td:nth-child(11),
+.bi-dashboard-plugin .operating-cost-pivot-table th:nth-child(12),
+.bi-dashboard-plugin .operating-cost-pivot-table td:nth-child(12) {
+    min-width: 120px;
 }
 
 /* 運営コストタブ内で上段テーブルとピボットテーブルの間隔を空ける */
@@ -592,7 +644,7 @@
 
 .bi-dashboard-plugin .unimplemented-message p {
     color: #9ca3af;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.6;
 }
 
@@ -619,19 +671,19 @@
 .bi-dashboard-plugin .formula-section h5 {
     margin: 0 0 6px 0;
     color: #374151;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 .bi-dashboard-plugin .formula-content p {
     margin: 0 0 6px 0;
-    font-size: 12px;
+    font-size: 13px;
     color: #374151;
     font-weight: 500;
 }
 
 .bi-dashboard-plugin .formula-calculation {
-    font-size: 12px;
+    font-size: 13px;
     color: #1f2937;
     font-family: 'Courier New', monospace;
     background-color: #ffffff;
@@ -685,14 +737,14 @@
 .bi-dashboard-plugin .forecast-info h5 {
     margin: 0 0 6px 0;
     color: #374151;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 .bi-dashboard-plugin .current-info p,
 .bi-dashboard-plugin .forecast-info p {
     margin: 2px 0;
-    font-size: 12px;
+    font-size: 13px;
     color: #374151;
 }
 
@@ -705,7 +757,7 @@
 .bi-dashboard-plugin .tax-rate-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .bi-dashboard-plugin .tax-rate-table th,
@@ -754,14 +806,14 @@
     margin-bottom: 2px;
     font-weight: 500;
     color: #374151;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .bi-dashboard-plugin .form-group input {
     padding: 12px 16px;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 14px;
     background: #ffffff;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -801,16 +853,25 @@
     .bi-dashboard-plugin .container {
         padding: 6px;
         gap: 6px;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
     }
     
     .bi-dashboard-plugin .top-section {
         flex-direction: column;
         height: auto;
+        display: flex; /* SPではflexに戻す */
     }
     
     .bi-dashboard-plugin .table-section,
     .bi-dashboard-plugin .chart-section {
         height: 250px;
+    }
+
+    .bi-dashboard-plugin .help-section {
+        order: -1; /* 説明欄を一番上に */
+        height: 200px;
     }
     
     .bi-dashboard-plugin .bottom-section {

@@ -11,13 +11,13 @@ export function createOperatingCostTab(appData) {
             <td>現状</td>
             <td><input type="text" id="operatingCostProp_${i}_current_rate" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_noiRate" value="0" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_propertyTax" value="${prop.property_tax?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_management" value="${prop.management_fee?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_repair" value="${prop.building_repair_cost?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_restoration" value="${prop.restoration_cost?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_maintenance" value="${prop.maintenance_cost?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_netIncome" value="${prop.net_income?.value ?? 0}" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_current_fullRent" value="${prop.full_rent?.value ?? 0}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_propertyTax" value="${Math.round(Number(prop.property_tax?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_management" value="${Math.round(Number(prop.management_fee?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_repair" value="${Math.round(Number(prop.building_repair_cost?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_restoration" value="${Math.round(Number(prop.restoration_cost?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_maintenance" value="${Math.round(Number(prop.maintenance_cost?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_netIncome" value="${Math.round(Number(prop.net_income?.value ?? 0))}" readonly></td>
+            <td><input type="text" id="operatingCostProp_${i}_current_fullRent" value="${Math.round(Number(prop.full_rent?.value ?? 0))}" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_totalCost" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_current_noi" value="0" readonly></td>
         </tr>
@@ -25,13 +25,13 @@ export function createOperatingCostTab(appData) {
             <td>試算</td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_rate" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_noiRate" value="0" readonly></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_propertyTax" value="${prop.property_tax?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_management" value="${prop.management_fee?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_repair" value="${prop.building_repair_cost?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_restoration" value="${prop.restoration_cost?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_maintenance" value="${prop.maintenance_cost?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_netIncome" value="${prop.net_income?.value ?? 0}"></td>
-            <td><input type="text" id="operatingCostProp_${i}_forecast_fullRent" value="${prop.full_rent?.value ?? 0}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_propertyTax" value="${Math.round(Number(prop.property_tax?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_management" value="${Math.round(Number(prop.management_fee?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_repair" value="${Math.round(Number(prop.building_repair_cost?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_restoration" value="${Math.round(Number(prop.restoration_cost?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_maintenance" value="${Math.round(Number(prop.maintenance_cost?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_netIncome" value="${Math.round(Number(prop.net_income?.value ?? 0))}"></td>
+            <td><input type="text" id="operatingCostProp_${i}_forecast_fullRent" value="${Math.round(Number(prop.full_rent?.value ?? 0))}"></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_totalCost" value="0" readonly></td>
             <td><input type="text" id="operatingCostProp_${i}_forecast_noi" value="0" readonly></td>
         </tr>
@@ -43,8 +43,8 @@ export function createOperatingCostTab(appData) {
                 <thead>
                     <tr>
                         <th></th>
-                        <th>運営コスト率(%)</th>
-                        <th>NOI率(%)</th>
+                        <th>運営コスト率</th>
+                        <th>NOI率</th>
                         <th>固都税</th>
                         <th>管理料</th>
                         <th>建物修繕費</th>
@@ -93,8 +93,8 @@ export function createOperatingCostTab(appData) {
                     <tr>
                         <th>物件名</th>
                         <th>現状/試算</th>
-                        <th>運営コスト率(%)</th>
-                        <th>NOI率(%)</th>
+                        <th>運営コスト率</th>
+                        <th>NOI率</th>
                         <th>固都税</th>
                         <th>管理料</th>
                         <th>建物修繕費</th>
@@ -240,8 +240,8 @@ export function createOperatingCostTab(appData) {
         const currentRate = currentFullRentTotal > 0 ? (currentTotalCost / currentFullRentTotal) * 100 : 0;
         const forecastRate = forecastFullRentTotal > 0 ? (forecastTotalCost / forecastFullRentTotal) * 100 : 0;
         
-        document.getElementById('operatingCostTblCurrentRate').value = String(Math.round(currentRate));
-        document.getElementById('operatingCostTblForecastRate').value = String(Math.round(forecastRate));
+        document.getElementById('operatingCostTblCurrentRate').value = String(Math.round(currentRate)) + '%';
+        document.getElementById('operatingCostTblForecastRate').value = String(Math.round(forecastRate)) + '%';
         
         // NOIの計算
         const currentNoi = currentNetIncomeTotal - currentTotalCost;
@@ -254,8 +254,8 @@ export function createOperatingCostTab(appData) {
         const currentNoiRate = currentFullRentTotal > 0 ? (currentNoi / currentFullRentTotal) * 100 : 0;
         const forecastNoiRate = forecastFullRentTotal > 0 ? (forecastNoi / forecastFullRentTotal) * 100 : 0;
         
-        document.getElementById('operatingCostTblCurrentNoiRate').value = String(Math.round(currentNoiRate));
-        document.getElementById('operatingCostTblForecastNoiRate').value = String(Math.round(forecastNoiRate));
+        document.getElementById('operatingCostTblCurrentNoiRate').value = String(Math.round(currentNoiRate)) + '%';
+        document.getElementById('operatingCostTblForecastNoiRate').value = String(Math.round(forecastNoiRate)) + '%';
         
         // トップ連携: 隠し number 入力を更新し input イベントを発火
         const hiddenCurrent = document.getElementById('operatingCostCurrent');
@@ -319,9 +319,9 @@ export function createOperatingCostTab(appData) {
         const noiRate = fullRent > 0 ? (noi / fullRent) * 100 : 0;
 
         totalCostEl.value = formatNumber(totalCost);
-        rateEl.value = String(Math.round(rate));
+        rateEl.value = String(Math.round(rate)) + '%';
         noiEl.value = formatNumber(noi);
-        noiRateEl.value = String(Math.round(noiRate));
+        noiRateEl.value = String(Math.round(noiRate)) + '%';
         
         // 上段テーブルの合計も更新
         updateSummaryTable();
@@ -347,9 +347,9 @@ export function createOperatingCostTab(appData) {
 
     // 初期表示: 現状の運営コスト率セルに初期値を反映
     const currentRateCell = document.getElementById('operatingCostTblCurrentRate');
-    if (currentRateCell) currentRateCell.value = String(Math.round(Number(initial.current || 0)));
+    if (currentRateCell) currentRateCell.value = String(Math.round(Number(initial.current || 0))) + '%';
     const forecastRateCell = document.getElementById('operatingCostTblForecastRate');
-    if (forecastRateCell) forecastRateCell.value = String(Math.round(Number(initial.forecast || 0)));
+    if (forecastRateCell) forecastRateCell.value = String(Math.round(Number(initial.forecast || 0))) + '%';
 
     // 初期計算（初期表示の運営コスト率値を保持しつつ）
     setTimeout(() => {

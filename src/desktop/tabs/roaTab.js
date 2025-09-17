@@ -24,16 +24,16 @@ export function createRoaTab(appData) {
             <td><input type="text" id="roaProp_${i}_current_market" value="${prop.market_price?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_income" value="${prop.income?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="${String(Math.round(assetEfficiency))}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_roa" value="${String(Math.round(roa))}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="${String(Math.round(assetEfficiency))}%" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_roa" value="${String(Math.round(roa))}%" readonly></td>
         </tr>
         <tr data-prop-index="${i}" data-scenario="forecast">
             <td>試算</td>
             <td><input type="text" id="roaProp_${i}_forecast_market" value="${prop.market_price?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_income" value="${prop.income?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}"></td>
-            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="${String(Math.round(assetEfficiency))}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_forecast_roa" value="${String(Math.round(roa))}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="${String(Math.round(assetEfficiency))}%" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_roa" value="${String(Math.round(roa))}%" readonly></td>
         </tr>
     `;
     }).join('');
@@ -47,8 +47,8 @@ export function createRoaTab(appData) {
                         <th>実勢価格</th>
                         <th>収支</th>
                         <th>相続税評価額</th>
-                        <th>資産効率(%)</th>
-                        <th>ROA(%)</th>
+                        <th>資産効率</th>
+                        <th>ROA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,8 +79,8 @@ export function createRoaTab(appData) {
                         <th>実勢価格</th>
                         <th>収支</th>
                         <th>相続税評価額</th>
-                        <th>資産効率(%)</th>
-                        <th>ROA(%)</th>
+                        <th>資産効率</th>
+                        <th>ROA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -198,10 +198,10 @@ export function createRoaTab(appData) {
         const currentRoa = currentInheritanceTotal > 0 ? (currentIncomeTotal / currentInheritanceTotal) * 100 : 0;
         const forecastRoa = forecastInheritanceTotal > 0 ? (forecastIncomeTotal / forecastInheritanceTotal) * 100 : 0;
         
-        document.getElementById('roaTblCurrentAssetEfficiency').value = String(Math.round(currentAssetEfficiency));
-        document.getElementById('roaTblCurrentRoa').value = String(Math.round(currentRoa));
-        document.getElementById('roaTblForecastAssetEfficiency').value = String(Math.round(forecastAssetEfficiency));
-        document.getElementById('roaTblForecastRoa').value = String(Math.round(forecastRoa));
+        document.getElementById('roaTblCurrentAssetEfficiency').value = String(Math.round(currentAssetEfficiency)) + '%';
+        document.getElementById('roaTblCurrentRoa').value = String(Math.round(currentRoa)) + '%';
+        document.getElementById('roaTblForecastAssetEfficiency').value = String(Math.round(forecastAssetEfficiency)) + '%';
+        document.getElementById('roaTblForecastRoa').value = String(Math.round(forecastRoa)) + '%';
         
         // トップ連携: 隠し number 入力を更新し input イベントを発火
         // 1) ROA
@@ -257,8 +257,8 @@ export function createRoaTab(appData) {
         // ROA = 収支 ÷ 相続税評価額 × 100
         const roaPercent = inheritanceVal > 0 ? (income / inheritanceVal) * 100 : 0;
 
-        assetEffEl.value = String(Math.round(assetEfficiency));
-        roaEl.value = String(Math.round(roaPercent));
+        assetEffEl.value = String(Math.round(assetEfficiency)) + '%';
+        roaEl.value = String(Math.round(roaPercent)) + '%';
         
         // 上段テーブルの合計も更新
         updateSummaryTable();
@@ -284,9 +284,9 @@ export function createRoaTab(appData) {
 
     // 初期表示: 現状のROAセルに初期値を反映
     const currentRoaCell = document.getElementById('roaTblCurrentRoa');
-    if (currentRoaCell) currentRoaCell.value = String(Math.round(Number(initial.current || 0)));
+    if (currentRoaCell) currentRoaCell.value = String(Math.round(Number(initial.current || 0))) + '%';
     const forecastRoaCell = document.getElementById('roaTblForecastRoa');
-    if (forecastRoaCell) forecastRoaCell.value = String(Math.round(Number(initial.forecast || 0)));
+    if (forecastRoaCell) forecastRoaCell.value = String(Math.round(Number(initial.forecast || 0))) + '%';
 
     // 試算値入力へのイベント設定
     [

@@ -7,7 +7,7 @@ export function createIncomeTaxTab(appData) {
 
     root.innerHTML = `
         <div class="form-container">
-            <table class="roa-table">
+            <table class="roa-table income-tax-table">
                 <thead>
                     <tr>
                         <th></th>
@@ -16,7 +16,7 @@ export function createIncomeTaxTab(appData) {
                         <th>土地固都税</th>
                         <th>建物固都税</th>
                         <th>長期修繕計画経費</th>
-                        <th>メンテナンス経費</th>
+                        <th>メンテ経費</th>
                         <th>借入金利息</th>
                         <th>減価償却費</th>
                         <th>保険料年額</th>
@@ -59,7 +59,7 @@ export function createIncomeTaxTab(appData) {
         
         <div class="calculation-formula-container">
             <div class="formula-content">
-                <p>課税所得 = 年賃料 - (年管理費 + 土地固都税 + 建物固都税 + 長期修繕計画経費 + メンテナンス経費 + 借入金利息 + 減価償却費 + 保険料年額)</p>
+                <p>課税所得 = 年賃料 - (年管理費 + 土地固都税 + 建物固都税 + 長期修繕計画経費 + メンテ経費 + 借入金利息 + 減価償却費 + 保険料年額)</p>
             </div>
         </div>
         
@@ -305,7 +305,7 @@ export function createIncomeTaxTab(appData) {
         const taxRate = calculateTaxRate(income);
         
         document.getElementById(`incomeTax${rowType}Income`).value = formatNumber(income);
-        document.getElementById(`incomeTax${rowType}TaxRate`).value = taxRate;
+        document.getElementById(`incomeTax${rowType}TaxRate`).value = taxRate + '%';
 
         // トップ表/チャートへ税率更新を通知
         const eventDetail = { rowType, taxRate };

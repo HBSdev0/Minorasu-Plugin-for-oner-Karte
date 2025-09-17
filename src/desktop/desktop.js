@@ -32,6 +32,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   let compressionMode = false; // 圧縮モードの状態
   let gradeMode = true; // ★成績表示モードの状態（デフォルトON）
   let averagesPending = false; // 平均集計がバックグラウンド中か
+  let currentChartType = 'radar';
 
   // ★設定から成績基準を更新する（モジュール版）
   function updateGradeThresholdsFromConfig() {
@@ -45,7 +46,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   const METRICS = ['assetEfficiency','roa','incomeTax','operatingCost','noi'];
   // 将来復活予定: 'inheritanceTax','borrowing'
   const FIELDS = ['current','average','forecast'];
-  const CHART_LABELS = ['資産効率(%)','ROA(%)','所得税率(%)','運営コスト率(%)','NOI率(%)'];
+  const CHART_LABELS = ['資産効率','ROA','所得税率','運営コスト率','NOI率'];
   // 将来復活予定: '相続税率(%)','借り入れ状況(%)'
   // カラー設定ユーティリティ
   function hexToRgb(color) {
@@ -790,7 +791,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     spaceRoot.innerHTML = '';
     spaceRoot.classList.add('bi-dashboard-plugin'); // プレフィックス用クラス
 
-    // コンテナ要素を作成（80%幅の適用のため）
+    // コンテナ要素を作成（1400px幅の適用のため）
     const container = document.createElement('div');
     container.className = 'container';
 
@@ -798,6 +799,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     top.className = 'top-section';
     top.appendChild(createTableSection(appData));
     top.appendChild(createChartSection());
+    top.appendChild(createHelpSection()); // 説明欄を追加
 
     const bottom = document.createElement('div');
     bottom.className = 'bottom-section';
@@ -831,12 +833,12 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     const rows = CHART_LABELS.map((label, i) => {
         const metricKey = METRICS[i];
         const v = appData[metricKey];
-        const avgText = averagesPending ? '集計中' : String(Math.round(v.average));
+        const avgText = averagesPending ? '集計中' : String(Math.round(v.average)) + '%';
         return `<tr>
             <td>${label}</td>
-            <td>${String(Math.round(v.current))}</td>
+            <td>${String(Math.round(v.current))}%</td>
             <td>${avgText}</td>
-            <td>${String(Math.round(v.forecast))}</td>
+            <td>${String(Math.round(v.forecast))}%</td>
         </tr>`;
     }).join('');
     section.innerHTML = `
@@ -865,8 +867,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     section.innerHTML = `
         <div class="chart-container">
             <div class="chart-controls">
-                <button class="chart-toggle-button active" data-chart="radar">レーダーチャート</button>
-                <button class="chart-toggle-button" data-chart="bar">棒グラフ</button>
+                <button id="chart-toggle-btn" class="chart-toggle-button">レーダーチャート</button>
                 <div class="compression-control">
                     <input type="checkbox" id="compressionCheckbox" class="compression-checkbox">
                     <label for="compressionCheckbox">平均を1として比較する</label>
@@ -875,19 +876,53 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
                     <input type="checkbox" id="gradeCheckbox" class="grade-checkbox" checked>
                     <label for="gradeCheckbox">成績で表示する</label>
                 </div>
-                <button class="grade-info-button" title="成績基準を表示">ℹ</button>
             </div>
             <div class="chart-item">
                 <div id="radarChartContainer">
-                    <h3>財務指標レーダーチャート</h3>
                     <div class="chart-canvas-wrap"><canvas id="radarChart"></canvas></div>
                 </div>
                 <div id="barChartContainer" style="display: none;">
-                    <h3>財務指標棒グラフ</h3>
                     <div class="chart-canvas-wrap"><canvas id="barChart"></canvas></div>
                 </div>
             </div>
         </div>
+    `;
+    return section;
+  }
+
+  function createHelpSection() {
+    const section = document.createElement('div');
+    section.className = 'help-section';
+
+    // 動的に成績基準テーブルを生成
+    const thresholds = getReadableThresholds();
+    const gradeTablesHtml = renderThresholdTablesForHelpSection(thresholds);
+
+    section.innerHTML = `
+        <h3>ℹ️ 表示項目について</h3>
+        
+        <h4>データの見方</h4>
+        <p><strong>現状：</strong>現在の物件データから算出</p>
+        <p><strong>平均：</strong>全オーナーの平均値</p>
+        <p><strong>試算：</strong>試算欄に入力した値から算出された値</p>
+
+        <h4>成績基準</h4>
+        ${gradeTablesHtml}
+        <p><small>※基準はプラグイン設定画面で変更できます</small></p>
+
+        <h4>指標の算出方法</h4>
+        <p><strong>資産効率：</strong><br>実勢価格 ÷ 相続税評価額 × 100</p>
+        <p><strong>ROA：</strong><br>収支 ÷ 相続税評価額 × 100</p>
+        <p><strong>運営コスト率：</strong><br>運営コスト合計 ÷ 満室賃料 × 100</p>
+        <p><strong>NOI率：</strong><br>(実質収入 - 運営コスト) ÷ 満室賃料 × 100</p>
+        <p><strong>所得税率：</strong><br>課税所得に応じた累進税率</p>
+
+        <h4>データ取得元</h4>
+        <ul>
+            <li>物件データ：物件マスタアプリ</li>
+            <li>オーナーデータ：オーナーマスタアプリ</li>
+            <li>平均値：全オーナーから自動算出</li>
+        </ul>
     `;
     return section;
   }
@@ -1039,11 +1074,12 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         });
     });
 
-    document.querySelectorAll('.chart-toggle-button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            switchChart(btn.dataset.chart);
-        });
-    });
+    const chartToggleBtn = document.getElementById('chart-toggle-btn');
+    if (chartToggleBtn) {
+      chartToggleBtn.addEventListener('click', () => {
+        toggleChart();
+      });
+    }
 
     document.querySelectorAll('.compression-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
@@ -1056,14 +1092,6 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
           toggleGradeMode();
       });
     });
-
-    // 成績基準モーダル
-    const infoBtn = document.querySelector('.grade-info-button');
-    if (infoBtn) {
-      infoBtn.addEventListener('click', () => {
-        openGradeInfoModal();
-      });
-    }
   }
 
   // タブ間連携（所得税タブ→トップ表/チャート）
@@ -1129,9 +1157,9 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         const v = data[key];
         const cells = row.querySelectorAll('td');
         if (cells.length < 4) return;
-        cells[1].textContent = String(Math.round(v.current));
-        cells[2].textContent = averagesPending ? '集計中' : String(Math.round(v.average));
-        cells[3].textContent = String(Math.round(v.forecast));
+        cells[1].textContent = String(Math.round(v.current)) + '%';
+        cells[2].textContent = averagesPending ? '集計中' : String(Math.round(v.average)) + '%';
+        cells[3].textContent = String(Math.round(v.forecast)) + '%';
     });
   }
 
@@ -1238,23 +1266,26 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   }
 
   // チャート切り替え
-  function switchChart(chartType) {
-    document.querySelectorAll('.chart-toggle-button').forEach(b => b.classList.remove('active'));
+  function toggleChart() {
     const radar = document.getElementById('radarChartContainer');
     const bar = document.getElementById('barChartContainer');
-    if (!radar || !bar) return;
-    radar.style.display = 'none';
-    bar.style.display = 'none';
-    if (chartType === 'radar') {
-        radar.style.display = 'block';
-        const btn = document.querySelector('.chart-toggle-button[data-chart="radar"]');
-        if (btn) btn.classList.add('active');
-        requestAnimationFrame(() => { if (radarChart) { radarChart.resize(); } });
-    } else {
+    const toggleBtn = document.getElementById('chart-toggle-btn');
+    if (!radar || !bar || !toggleBtn) return;
+
+    if (currentChartType === 'radar') {
+        // レーダーから棒へ
+        currentChartType = 'bar';
+        radar.style.display = 'none';
         bar.style.display = 'block';
-        const btn = document.querySelector('.chart-toggle-button[data-chart="bar"]');
-        if (btn) btn.classList.add('active');
-        requestAnimationFrame(() => { if (barChart) { barChart.resize(); } });
+        toggleBtn.textContent = '棒グラフ';
+        requestAnimationFrame(() => { if (barChart) barChart.resize(); });
+    } else {
+        // 棒からレーダーへ
+        currentChartType = 'radar';
+        bar.style.display = 'none';
+        radar.style.display = 'block';
+        toggleBtn.textContent = 'レーダーチャート';
+        requestAnimationFrame(() => { if (radarChart) radarChart.resize(); });
     }
   }
 
@@ -1284,31 +1315,7 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   // ★数値を成績に変換する関数（モジュール版）
   function calculateGrade(metric, value) { return calculateGradeModule(metric, value); }
 
-  // 成績基準モーダル生成
-  function openGradeInfoModal() {
-    try {
-      const thresholds = getReadableThresholds();
-      const overlay = document.createElement('div');
-      overlay.className = 'grade-info-overlay';
-      overlay.innerHTML = `
-        <div class="grade-info-modal">
-          <div class="grade-info-header">
-            <h3>成績基準一覧</h3>
-            <button class="grade-info-close" aria-label="閉じる">×</button>
-          </div>
-          <div class="grade-info-body">
-            ${renderThresholdTables(thresholds)}
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-      overlay.querySelector('.grade-info-close')?.addEventListener('click', () => overlay.remove());
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    } catch (e) {
-      console.error('Failed to open grade info modal:', e);
-    }
-  }
-
-  function renderThresholdTables(map) {
+  function renderThresholdTablesForHelpSection(map) {
     const labelMap = {
       assetEfficiency: '資産効率(%)',
       roa: 'ROA(%)',
@@ -1316,35 +1323,26 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
       operatingCost: '運営コスト率(%)',
       noi: 'NOI率(%)'
     };
-    const legend = `<div class="grade-info-legend">
-      <p>上から順に適用されます。区間表記は [ を「含む」、( を「含まない」、] を「含む」、) を「含まない」と表します。</p>
-      <p>例: [10, 20) は「10以上 20未満」を意味します。</p>
-    </div>`;
+
     const sections = Object.keys(map).map(k => {
+      if (!map[k] || map[k].length === 0) return '';
+      
       const rows = map[k].map(r => {
-        const bracket = bracketify(r.min, r.max, r.includeLower, r.includeUpper);
         const cond = conditionText(r.min, r.includeLower, r.max, r.includeUpper);
         return `<tr>
-          <td><span class="grade-badge">${escapeHtml(r.gradeLabel)}</span></td>
-          <td>${bracket}</td>
+          <td>${escapeHtml(r.gradeLabel)}</td>
           <td>${cond}</td>
         </tr>`;
       }).join('');
-      return `<div class="grade-info-section">
-        <h4>${labelMap[k] || k}</h4>
-        <table class="grade-info-table">
-          <thead><tr><th>成績</th><th>区間</th><th>条件</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-    }).join('');
-    return legend + sections;
-  }
 
-  function bracketify(min, max, incL, incU) {
-    const left = incL ? '[' : '(';
-    const right = incU ? ']' : ')';
-    return `${left}${formatNumber(min)}, ${formatNumber(max)}${right}`;
+      return `
+        <h4>${labelMap[k] || k}</h4>
+        <table class="score-table">
+          <thead><tr><th>成績</th><th>条件</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }).join('');
+    return sections;
   }
 
   function conditionText(min, incL, max, incU) {
