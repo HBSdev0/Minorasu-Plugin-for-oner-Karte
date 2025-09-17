@@ -24,16 +24,16 @@ export function createRoaTab(appData) {
             <td><input type="text" id="roaProp_${i}_current_market" value="${prop.market_price?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_income" value="${prop.income?.value ?? 0}" readonly></td>
             <td><input type="text" id="roaProp_${i}_current_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="${assetEfficiency.toFixed(1)}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_current_roa" value="${roa.toFixed(1)}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_assetEfficiency" value="${String(Math.round(assetEfficiency))}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_current_roa" value="${String(Math.round(roa))}" readonly></td>
         </tr>
         <tr data-prop-index="${i}" data-scenario="forecast">
             <td>試算</td>
             <td><input type="text" id="roaProp_${i}_forecast_market" value="${prop.market_price?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_income" value="${prop.income?.value ?? 0}"></td>
             <td><input type="text" id="roaProp_${i}_forecast_inheritance" value="${prop.inheritance_tax_value?.value ?? 0}"></td>
-            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="${assetEfficiency.toFixed(1)}" readonly></td>
-            <td><input type="text" id="roaProp_${i}_forecast_roa" value="${roa.toFixed(1)}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_assetEfficiency" value="${String(Math.round(assetEfficiency))}" readonly></td>
+            <td><input type="text" id="roaProp_${i}_forecast_roa" value="${String(Math.round(roa))}" readonly></td>
         </tr>
     `;
     }).join('');
@@ -198,32 +198,32 @@ export function createRoaTab(appData) {
         const currentRoa = currentInheritanceTotal > 0 ? (currentIncomeTotal / currentInheritanceTotal) * 100 : 0;
         const forecastRoa = forecastInheritanceTotal > 0 ? (forecastIncomeTotal / forecastInheritanceTotal) * 100 : 0;
         
-        document.getElementById('roaTblCurrentAssetEfficiency').value = currentAssetEfficiency.toFixed(1);
-        document.getElementById('roaTblCurrentRoa').value = currentRoa.toFixed(1);
-        document.getElementById('roaTblForecastAssetEfficiency').value = forecastAssetEfficiency.toFixed(1);
-        document.getElementById('roaTblForecastRoa').value = forecastRoa.toFixed(1);
+        document.getElementById('roaTblCurrentAssetEfficiency').value = String(Math.round(currentAssetEfficiency));
+        document.getElementById('roaTblCurrentRoa').value = String(Math.round(currentRoa));
+        document.getElementById('roaTblForecastAssetEfficiency').value = String(Math.round(forecastAssetEfficiency));
+        document.getElementById('roaTblForecastRoa').value = String(Math.round(forecastRoa));
         
         // トップ連携: 隠し number 入力を更新し input イベントを発火
         // 1) ROA
         const hiddenRoaCurrent = document.getElementById('roaCurrent');
         const hiddenRoaForecast = document.getElementById('roaForecast');
         if (hiddenRoaCurrent) {
-            hiddenRoaCurrent.value = currentRoa.toFixed(1);
+            hiddenRoaCurrent.value = String(currentRoa);
             hiddenRoaCurrent.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (hiddenRoaForecast) {
-            hiddenRoaForecast.value = forecastRoa.toFixed(1);
+            hiddenRoaForecast.value = String(forecastRoa);
             hiddenRoaForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
         // 2) 資産効率
         const hiddenAeCurrent = document.getElementById('assetEfficiencyCurrent');
         const hiddenAeForecast = document.getElementById('assetEfficiencyForecast');
         if (hiddenAeCurrent) {
-            hiddenAeCurrent.value = currentAssetEfficiency.toFixed(1);
+            hiddenAeCurrent.value = String(currentAssetEfficiency);
             hiddenAeCurrent.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (hiddenAeForecast) {
-            hiddenAeForecast.value = forecastAssetEfficiency.toFixed(1);
+            hiddenAeForecast.value = String(forecastAssetEfficiency);
             hiddenAeForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
@@ -257,8 +257,8 @@ export function createRoaTab(appData) {
         // ROA = 収支 ÷ 相続税評価額 × 100
         const roaPercent = inheritanceVal > 0 ? (income / inheritanceVal) * 100 : 0;
 
-        assetEffEl.value = assetEfficiency.toFixed(1);
-        roaEl.value = roaPercent.toFixed(1);
+        assetEffEl.value = String(Math.round(assetEfficiency));
+        roaEl.value = String(Math.round(roaPercent));
         
         // 上段テーブルの合計も更新
         updateSummaryTable();
@@ -284,9 +284,9 @@ export function createRoaTab(appData) {
 
     // 初期表示: 現状のROAセルに初期値を反映
     const currentRoaCell = document.getElementById('roaTblCurrentRoa');
-    if (currentRoaCell) currentRoaCell.value = Number(initial.current || 0).toFixed(1);
+    if (currentRoaCell) currentRoaCell.value = String(Math.round(Number(initial.current || 0)));
     const forecastRoaCell = document.getElementById('roaTblForecastRoa');
-    if (forecastRoaCell) forecastRoaCell.value = Number(initial.forecast || 0).toFixed(1);
+    if (forecastRoaCell) forecastRoaCell.value = String(Math.round(Number(initial.forecast || 0)));
 
     // 試算値入力へのイベント設定
     [

@@ -245,7 +245,7 @@ export function createIncomeTaxTab(appData) {
         
         // 現状値の差額情報
         document.getElementById('currentIncomeDisplay').textContent = formatNumber(currentIncome) + '円';
-        document.getElementById('currentRateDisplay').textContent = currentTaxRate + '%';
+        document.getElementById('currentRateDisplay').textContent = String(Math.round(currentTaxRate)) + '%';
         
         const currentDiff = calculateTaxDifference(currentIncome, currentTaxRate);
         document.getElementById('currentLowerAmount').textContent = currentDiff.lowerDiff;
@@ -253,7 +253,7 @@ export function createIncomeTaxTab(appData) {
         
         // 試算値の差額情報
         document.getElementById('forecastIncomeDisplay').textContent = formatNumber(forecastIncome) + '円';
-        document.getElementById('forecastRateDisplay').textContent = forecastTaxRate + '%';
+        document.getElementById('forecastRateDisplay').textContent = String(Math.round(forecastTaxRate)) + '%';
         
         const forecastDiff = calculateTaxDifference(forecastIncome, forecastTaxRate);
         document.getElementById('forecastLowerAmount').textContent = forecastDiff.lowerDiff;

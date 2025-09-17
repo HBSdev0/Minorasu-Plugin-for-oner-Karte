@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>色覚多様性に配慮した3色例（Okabe–Ito）</title>
+<style>
+  :root{
+    --oi-orange:#E69F00;
+    --oi-blue:#0072B2;
+    --oi-green:#009E73;
+  }
+  body{font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; margin:24px;}
+  .grid{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+  .swatch{
+    border-radius:14px; overflow:hidden; border:1px solid #d0d0d0;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
+  }
+  .chip{
+    height:96px;
+  }
+  .meta{padding:12px 14px; background:#fff; display:flex; justify-content:space-between; align-items:center;}
+  .name{font-weight:600;}
+  .hex{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity:.8}
+  /* アクセシビリティ: 色だけに依存しない判別のための模様（任意で外してOK） */
+  .pattern{
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px);
+    mix-blend-mode: overlay;
+    height:100%;
+  }
+</style>
+</head>
+<body>
+  <h1>色覚配慮の3色サンプル（Okabe–Ito）</h1>
+  <p>以下の3色は多くの色弱タイプでも相互に識別しやすい組合せです。</p>
+
+  <div class="grid" role="list">
+    <figure class="swatch" role="listitem" aria-label="オレンジ（#E69F00）">
+      <div class="chip" style="background:var(--oi-orange); color:#000;">
+        <div class="pattern" aria-hidden="true"></div>
+      </div>
+      <figcaption class="meta">
+        <span class="name">Orange</span><span class="hex">#E69F00</span>
+      </figcaption>
+    </figure>
+
+    <figure class="swatch" role="listitem" aria-label="ブルー（#0072B2）">
+      <div class="chip" style="background:var(--oi-blue); color:#fff;">
+        <div class="pattern" aria-hidden="true"></div>
+      </div>
+      <figcaption class="meta">
+        <span class="name">Blue</span><span class="hex">#0072B2</span>
+      </figcaption>
+    </figure>
+
+    <figure class="swatch" role="listitem" aria-label="グリーン（#009E73）">
+      <div class="chip" style="background:var(--oi-green); color:#fff;">
+        <div class="pattern" aria-hidden="true"></div>
+      </div>
+      <figcaption class="meta">
+        <span class="name">Green</span><span class="hex">#009E73</span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <p style="margin-top:16px;">
+    提案色：<code>#E69F00</code>（オレンジ）, <code>#0072B2</code>（ブルー）, <code>#009E73</code>（グリーン）<br>
+    ※上段の薄い斜線模様は「色以外の手掛かり」を追加した例です。不要なら <code>.pattern</code> 関連を削除してください。
+  </p>
+</body>
+</html>

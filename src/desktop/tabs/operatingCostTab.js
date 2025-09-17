@@ -240,8 +240,8 @@ export function createOperatingCostTab(appData) {
         const currentRate = currentFullRentTotal > 0 ? (currentTotalCost / currentFullRentTotal) * 100 : 0;
         const forecastRate = forecastFullRentTotal > 0 ? (forecastTotalCost / forecastFullRentTotal) * 100 : 0;
         
-        document.getElementById('operatingCostTblCurrentRate').value = currentRate.toFixed(1);
-        document.getElementById('operatingCostTblForecastRate').value = forecastRate.toFixed(1);
+        document.getElementById('operatingCostTblCurrentRate').value = String(Math.round(currentRate));
+        document.getElementById('operatingCostTblForecastRate').value = String(Math.round(forecastRate));
         
         // NOIの計算
         const currentNoi = currentNetIncomeTotal - currentTotalCost;
@@ -254,29 +254,29 @@ export function createOperatingCostTab(appData) {
         const currentNoiRate = currentFullRentTotal > 0 ? (currentNoi / currentFullRentTotal) * 100 : 0;
         const forecastNoiRate = forecastFullRentTotal > 0 ? (forecastNoi / forecastFullRentTotal) * 100 : 0;
         
-        document.getElementById('operatingCostTblCurrentNoiRate').value = currentNoiRate.toFixed(1);
-        document.getElementById('operatingCostTblForecastNoiRate').value = forecastNoiRate.toFixed(1);
+        document.getElementById('operatingCostTblCurrentNoiRate').value = String(Math.round(currentNoiRate));
+        document.getElementById('operatingCostTblForecastNoiRate').value = String(Math.round(forecastNoiRate));
         
         // トップ連携: 隠し number 入力を更新し input イベントを発火
         const hiddenCurrent = document.getElementById('operatingCostCurrent');
         const hiddenForecast = document.getElementById('operatingCostForecast');
         if (hiddenCurrent) {
-            hiddenCurrent.value = currentRate.toFixed(1);
+            hiddenCurrent.value = String(currentRate);
             hiddenCurrent.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (hiddenForecast) {
-            hiddenForecast.value = forecastRate.toFixed(1);
+            hiddenForecast.value = String(forecastRate);
             hiddenForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
         // NOI率のトップ連携
         const hiddenNoiCurrent = document.getElementById('noiCurrent');
         const hiddenNoiForecast = document.getElementById('noiForecast');
         if (hiddenNoiCurrent) {
-            hiddenNoiCurrent.value = currentNoiRate.toFixed(1);
+            hiddenNoiCurrent.value = String(currentNoiRate);
             hiddenNoiCurrent.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (hiddenNoiForecast) {
-            hiddenNoiForecast.value = forecastNoiRate.toFixed(1);
+            hiddenNoiForecast.value = String(forecastNoiRate);
             hiddenNoiForecast.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
@@ -319,9 +319,9 @@ export function createOperatingCostTab(appData) {
         const noiRate = fullRent > 0 ? (noi / fullRent) * 100 : 0;
 
         totalCostEl.value = formatNumber(totalCost);
-        rateEl.value = rate.toFixed(1);
+        rateEl.value = String(Math.round(rate));
         noiEl.value = formatNumber(noi);
-        noiRateEl.value = noiRate.toFixed(1);
+        noiRateEl.value = String(Math.round(noiRate));
         
         // 上段テーブルの合計も更新
         updateSummaryTable();
@@ -347,9 +347,9 @@ export function createOperatingCostTab(appData) {
 
     // 初期表示: 現状の運営コスト率セルに初期値を反映
     const currentRateCell = document.getElementById('operatingCostTblCurrentRate');
-    if (currentRateCell) currentRateCell.value = Number(initial.current || 0).toFixed(1);
+    if (currentRateCell) currentRateCell.value = String(Math.round(Number(initial.current || 0)));
     const forecastRateCell = document.getElementById('operatingCostTblForecastRate');
-    if (forecastRateCell) forecastRateCell.value = Number(initial.forecast || 0).toFixed(1);
+    if (forecastRateCell) forecastRateCell.value = String(Math.round(Number(initial.forecast || 0)));
 
     // 初期計算（初期表示の運営コスト率値を保持しつつ）
     setTimeout(() => {

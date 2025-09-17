@@ -47,10 +47,11 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
   const FIELDS = ['current','average','forecast'];
   const CHART_LABELS = ['資産効率(%)','ROA(%)','所得税率(%)','運営コスト率(%)','NOI率(%)'];
   // 将来復活予定: '相続税率(%)','借り入れ状況(%)'
+  // 色覚異常対応カラーパレット（WCAG準拠）
   const DATASET_STYLE = [
-      { label: '現状', border: 'rgb(52, 152, 219)', bgRadar: 'rgba(52, 152, 219, 0.2)', bgBar: 'rgba(52, 152, 219, 0.8)', bwRadar: 2, bwBar: 1 },
-      { label: '平均', border: 'rgb(231, 76, 60)', bgRadar: 'rgba(231, 76, 60, 0.2)', bgBar: 'rgba(231, 76, 60, 0.8)', bwRadar: 2, bwBar: 1 },
-      { label: '試算', border: 'rgb(46, 204, 113)', bgRadar: 'rgba(46, 204, 113, 0.2)', bgBar: 'rgba(46, 204, 113, 0.8)', bwRadar: 2, bwBar: 1 }
+      { label: '現状', border: 'rgb(0, 123, 255)', bgRadar: 'rgba(0, 123, 255, 0.2)', bgBar: 'rgba(0, 123, 255, 0.8)', bwRadar: 2, bwBar: 1 }, // 青（Blue）
+      { label: '平均', border: 'rgb(255, 87, 34)', bgRadar: 'rgba(255, 87, 34, 0.2)', bgBar: 'rgba(255, 87, 34, 0.8)', bwRadar: 2, bwBar: 1 }, // オレンジ（Orange）
+      { label: '試算', border: 'rgb(76, 175, 80)', bgRadar: 'rgba(76, 175, 80, 0.2)', bgBar: 'rgba(76, 175, 80, 0.8)', bwRadar: 2, bwBar: 1 } // 緑（Green）
   ];
 
   // データオブジェクト: Kintoneから取得するように変更するため削除
@@ -735,12 +736,12 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
     const rows = CHART_LABELS.map((label, i) => {
         const metricKey = METRICS[i];
         const v = appData[metricKey];
-        const avgText = averagesPending ? '集計中' : v.average.toFixed(1);
+        const avgText = averagesPending ? '集計中' : String(Math.round(v.average));
         return `<tr>
             <td>${label}</td>
-            <td>${v.current.toFixed(1)}</td>
+            <td>${String(Math.round(v.current))}</td>
             <td>${avgText}</td>
-            <td>${v.forecast.toFixed(1)}</td>
+            <td>${String(Math.round(v.forecast))}</td>
         </tr>`;
     }).join('');
     section.innerHTML = `
@@ -1033,9 +1034,9 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         const v = data[key];
         const cells = row.querySelectorAll('td');
         if (cells.length < 4) return;
-        cells[1].textContent = v.current.toFixed(1);
-        cells[2].textContent = averagesPending ? '集計中' : v.average.toFixed(1);
-        cells[3].textContent = v.forecast.toFixed(1);
+        cells[1].textContent = String(Math.round(v.current));
+        cells[2].textContent = averagesPending ? '集計中' : String(Math.round(v.average));
+        cells[3].textContent = String(Math.round(v.forecast));
     });
   }
 
@@ -1105,12 +1106,15 @@ import { updateGradeThresholdsFromConfig as updateGradeThresholdsFromConfigModul
         if (vals && Array.isArray(vals) && vals.length === METRICS.length) {
           // データを数値に変換して安全性を確保
           const safeVals = vals.map(val => Number(val) || 0);
+          const shouldHide = (f === 'average' && averagesPending) ? true : false;
           
           if (radarChart && radarChart.data && radarChart.data.datasets && radarChart.data.datasets[i]) {
             radarChart.data.datasets[i].data = safeVals;
+            radarChart.data.datasets[i].hidden = shouldHide;
           }
           if (barChart && barChart.data && barChart.data.datasets && barChart.data.datasets[i]) {
             barChart.data.datasets[i].data = safeVals;
+            barChart.data.datasets[i].hidden = shouldHide;
           }
         } else {
           console.warn(`Invalid chart values for field ${f}:`, vals);
